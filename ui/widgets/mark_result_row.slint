@@ -2,22 +2,27 @@ import { MarkRowItem } from "../structs/mark_row_item.slint";
 
 export component MarkResultRow {
   in property <MarkRowItem> mark;
+  in property <bool> is-current;
   callback activated();
 
   height: 36px;
 
-  HorizontalLayout {
-    padding: 6px;
-    spacing: 8px;
+  Rectangle {
+    background: ta.pressed || root.is-current ? orange : transparent;
 
-    Text { 
-      text: root.mark.slot; 
+    HorizontalLayout {
+      padding: 6px;
+      spacing: 8px;
+
+      Text { text: root.mark.slot; }
+      Text {
+        text: root.mark.title;
+        horizontal-stretch: 1;
+        overflow: elide;
+        wrap: no-wrap;
+      }
     }
-    Text { 
-      text: root.mark.title; 
-      horizontal-stretch: 1; 
-      overflow: elide;
-      wrap: no-wrap;
-    }
+
+    ta := TouchArea {}
   }
 }

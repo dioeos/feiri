@@ -1,9 +1,17 @@
 
 import { LineEdit } from "std-widgets.slint";
 
-export component SearchInput {
+export component SearchInput inherits FocusScope {
+  forward-focus: text_input;
   in-out property <string> text <=> text-input.text;
+
   callback search-changed(string);
+  callback esc-pressed();
+
+  KeyBinding {
+    keys: @keys(Escape);
+    activated => { root.esc-pressed(); }
+  }
 
   text_input := LineEdit {
     width: parent.width;
@@ -13,9 +21,5 @@ export component SearchInput {
     edited(value) => {
       root.search-changed(value)
     }
-  }
-
-  init => {
-    text_input.focus();
   }
 }
