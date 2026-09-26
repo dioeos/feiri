@@ -2,12 +2,13 @@ import { MarkRowItem } from "../structs/mark_row_item.slint";
 
 export component MarkResultRow {
   in property <MarkRowItem> mark;
+  in property <bool> is-current;
   callback activated();
 
   height: 36px;
 
   Rectangle {
-    background: ta.pressed ? orange : skyblue;
+    background: ta.pressed || root.is-current ? orange : transparent;
 
     HorizontalLayout {
       padding: 6px;

@@ -1,9 +1,11 @@
 
 import { MarkRowItem } from "../structs/mark_row_item.slint";
-  import { MarkResultRow } from "./mark_result_row.slint";
+import { MarkResultRow } from "./mark_result_row.slint";
+import { ScrollView } from "std-widgets.slint";
 
 export component SearchResultMenu inherits FocusScope {
   in property <[MarkRowItem]> marks;
+  property <int> selected-index: 0;
 
   callback insert-pressed();
 
@@ -12,8 +14,42 @@ export component SearchResultMenu inherits FocusScope {
     activated => { root.insert-pressed(); }
   }
 
-  VerticalLayout {
-    for mark in root.marks : MarkResultRow { mark: mark; }
+  KeyBinding {
+    keys: @keys(J);
+    activated => {
+      if (root.marks.length > 0) {
+        root.selected-index = min(root.selected-index + 1, root.marks.length - 1);
+      }
+      root.scroll-to-selection();
+    }
+  }
+
+  KeyBinding {
+    keys: @keys(K);
+    activated => {
+      root.selected-index = max(root.selected-index - 1, 0);
+      root.scroll-to-selection();
+    }
+  }
+
+  scroll := ScrollView {
+    VerticalLayout {
+      for mark[index] in root.marks : MarkResultRow {
+        mark: mark;
+        is-current: index == root.selected-index;
+      }
+    }
+  }
+
+  function scroll-to-selection() {
+    if (root.marks.length == 0) { return ;}
+
+    if (scroll.content-y + root.selected-index * 36px < 0px) {
+      scroll.content-y = -root.selected-index * 36px;
+    } else if (scroll.content-y + (root.selected-index + 1) * 36px > scroll.visible-height) {
+      scroll.content-y = scroll.visible-height - (root.selected-index + 1) * 36px;
+    }
   }
 }
+
 
