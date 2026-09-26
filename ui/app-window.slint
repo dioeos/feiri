@@ -10,7 +10,7 @@ export component AppWindow inherits Window {
     no-frame: true;
     callback search-requested <=> search.search-changed;
 
-    forward-focus: search;
+    forward-focus: results;
 
     window-scope := FocusScope {
       VerticalBox {
