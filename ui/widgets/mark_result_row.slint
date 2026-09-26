@@ -6,18 +6,22 @@ export component MarkResultRow {
 
   height: 36px;
 
-  HorizontalLayout {
-    padding: 6px;
-    spacing: 8px;
+  Rectangle {
+    background: ta.pressed ? orange : skyblue;
 
-    Text { 
-      text: root.mark.slot; 
+    HorizontalLayout {
+      padding: 6px;
+      spacing: 8px;
+
+      Text { text: root.mark.slot; }
+      Text {
+        text: root.mark.title;
+        horizontal-stretch: 1;
+        overflow: elide;
+        wrap: no-wrap;
+      }
     }
-    Text { 
-      text: root.mark.title; 
-      horizontal-stretch: 1; 
-      overflow: elide;
-      wrap: no-wrap;
-    }
+
+    ta := TouchArea {}
   }
 }

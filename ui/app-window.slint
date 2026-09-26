@@ -10,12 +10,24 @@ export component AppWindow inherits Window {
     no-frame: true;
     callback search-requested <=> search.search-changed;
 
-    VerticalBox {
-      padding: 5px;
-      search := SearchInput {}
-      results := SearchResultMenu {
-        height: root.marks.length * 36px;
-        marks: root.marks;
+    forward-focus: search;
+
+    window-scope := FocusScope {
+      VerticalBox {
+        padding: 5px;
+          search := SearchInput {
+            esc-pressed => {
+              results.focus();
+            }
+          }
+
+        results := SearchResultMenu {
+          insert-pressed => {
+            search.focus();
+          }
+          height: root.marks.length * 36px;
+          marks: root.marks;
+        }
       }
     }
 }

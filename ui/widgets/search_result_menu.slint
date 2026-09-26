@@ -2,8 +2,15 @@
 import { MarkRowItem } from "../structs/mark_row_item.slint";
   import { MarkResultRow } from "./mark_result_row.slint";
 
-export component SearchResultMenu {
+export component SearchResultMenu inherits FocusScope {
   in property <[MarkRowItem]> marks;
+
+  callback insert-pressed();
+
+  KeyBinding {
+    keys: @keys(I);
+    activated => { root.insert-pressed(); }
+  }
 
   VerticalLayout {
     for mark in root.marks : MarkResultRow { mark: mark; }
