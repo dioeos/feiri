@@ -1,6 +1,7 @@
 <div align="center">
-  <span style="font-size: 2em; font-weight: bold;">Feiri</span>
-  <em>(FYUR-ee)</em>
+  <h1>
+    Feiri <small><em>(FYUR-ee)</em></small>
+  </h1>
 </div>
 
 <p align="center">
