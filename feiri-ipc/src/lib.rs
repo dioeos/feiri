@@ -1,0 +1,67 @@
+#![allow(clippy::doc_lazy_continuation)]
+//! Types for communicating with Feiri via IPC.
+//!
+//! After connecting to the Feiri socket, you can send 
+//!
+//! ## Features
+//!
+//! This crate offers the following features:
+//! - `clap`: derives the clap CLI parsing traits for the applicable traits. This
+//! feature is used internally by the Feiri daemon to support CLI functionality.
+
+/// Request from client to Feiri daemon
+#[derive(serde::Deserialize, serde::Serialize)]
+pub enum Request {
+    /// Peform an action
+    Action(Action)
+}
+
+
+/// An action that mutates or navigates Feiri state.
+///
+/// Action requests are sent to the daemon and perform operations such as assigning marks or focusing
+/// marked windows. They are sent by external applications, such as Feiri's `cli` and `ui` crates.
+#[derive(serde::Deserialize, serde::Serialize, Debug, PartialEq, Eq, Clone)]
+#[serde(tag = "type", rename_all = "snake_case")]
+#[cfg_attr(feature = "clap", derive(clap::Subcommand))]
+pub enum Action {
+    /// Marks the currently focused window with the given slot.
+    MarkWindow {
+        /// Slot to assign to the focused window.
+        ///
+        /// For example: `1`.
+        slot: u8,
+    },
+
+    /// Marks a specific window with the given slot.
+    MarkRequestedWindow {
+        /// Slot to assign to the window.
+        slot: u8,
+
+        /// Identifier of the window to mark.
+        ///
+        /// For example: `42`.
+        #[cfg_attr(feature = "clap", arg(long))]
+        id: u64,
+    },
+
+    /// Focuses the window assigned to the given mark slot.
+    FocusMark {
+        /// Slot of the mark to focus
+        slot: u8,
+    },
+
+    /// Focuses the next marked window based on the last focused mark slot.
+    ///
+    /// For example, if the last focused mark slot was `1`, `NextMark` request would
+    /// focus slot `2`, if present.
+    NextMark,
+
+    /// Focuses the previous marked window based on the last focused mark slot.
+    ///
+    /// For example, if the last focused mark slot was `2`, `PrevMark` request would
+    /// focus slot `1`, if present.
+    PrevMark,
+}
+
+pub mod socket;
