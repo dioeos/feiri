@@ -15,9 +15,9 @@ pub struct Window {
 
     /// Application identifier associated with the window according to Niri, if available
     /// For example: `"org.mozilla.firefox"` or `"com.mitchellh.ghostty"`
-    pub app_id: Option<String>
+    pub app_id: Option<String>,
 }
 
-/// Unique Feiri-domain specific identifier that wraps a window's ID assigned by Niri. 
+/// Unique Feiri-domain specific identifier that wraps a window's ID assigned by Niri.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct WindowId(pub u64);

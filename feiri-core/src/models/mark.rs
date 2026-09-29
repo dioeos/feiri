@@ -14,5 +14,5 @@ pub struct Mark {
     pub slot: usize,
 
     /// Feiri window currently associated with the mark
-    pub window: Window
+    pub window: Window,
 }

@@ -5,5 +5,3 @@ mod window;
 pub use error::Error;
 pub use mark::MarkService;
 pub use window::WindowService;
-
-

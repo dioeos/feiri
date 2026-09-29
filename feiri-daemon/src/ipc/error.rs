@@ -1,6 +1,5 @@
 use std::path::PathBuf;
 
-
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("{self:?}")]
@@ -12,7 +11,7 @@ pub enum Error {
     #[error("{self:?}")]
     UnexpectedSocketFileConflict {
         file_path: PathBuf,
-        reason: &'static str
+        reason: &'static str,
     },
 
     #[error("{self:?}")]
@@ -41,5 +40,4 @@ pub enum Error {
 
     #[error("{self:?}")]
     UnexpectedIpcServerFailure(String),
-
 }

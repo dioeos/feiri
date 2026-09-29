@@ -3,17 +3,16 @@ use feiri_ipc::{Action, Query};
 #[derive(clap::Parser)]
 pub struct Cli {
     #[command(subcommand)]
-    pub subcommand: Option<Sub>
+    pub subcommand: Option<Sub>,
 }
 
 #[derive(clap::Subcommand, Clone)]
 pub enum Sub {
     Msg {
         #[command(subcommand)]
-        msg: Msg
-    }
+        msg: Msg,
+    },
 }
-
 
 #[derive(clap::Subcommand, Clone, Debug)]
 pub enum Msg {
@@ -23,6 +22,6 @@ pub enum Msg {
     },
     Query {
         #[command(subcommand)]
-        query: Query
-    }
+        query: Query,
+    },
 }

@@ -5,7 +5,7 @@ use tracing::{debug, trace};
 
 use crate::{
     niri::conversions::IntoFeiriWindow,
-    services::{WindowService, MarkService}
+    services::{MarkService, WindowService},
 };
 
 #[allow(dead_code)]

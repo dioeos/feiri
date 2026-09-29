@@ -4,7 +4,7 @@ pub enum Error {
     EventChannelClosed,
 
     #[error(transparent)]
-    Compositor(#[from] CompositorError)
+    Compositor(#[from] CompositorError),
 }
 
 /// Error that directly relates to interfacing with Niri

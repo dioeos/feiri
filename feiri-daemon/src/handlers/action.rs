@@ -1,10 +1,10 @@
 use std::sync::Arc;
 
+use super::Error;
+use crate::services::MarkService;
 use feiri_core::models::WindowId;
 use feiri_ipc::Action;
 use tracing::debug;
-use super::Error;
-use crate::services::MarkService;
 
 pub struct ActionHandler {
     mark_service: Arc<MarkService>,
@@ -15,7 +15,7 @@ impl ActionHandler {
         Self { mark_service }
     }
 
-    pub async fn handle_action_request(&self, action: Action) -> Result<(), Error>  {
+    pub async fn handle_action_request(&self, action: Action) -> Result<(), Error> {
         match action {
             Action::MarkWindow { slot } => {
                 self.mark_service.mark_focused_window(slot).await?;

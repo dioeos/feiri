@@ -4,7 +4,6 @@ use tokio::{io::AsyncWriteExt, net::UnixStream};
 
 use crate::Request;
 
-
 pub const FEIRI_IPC_SOCK: &str = "feiri-ipc.sock";
 
 #[derive(Debug, thiserror::Error)]
@@ -16,17 +15,16 @@ pub enum Error {
     Io(#[from] io::Error),
 
     #[error(transparent)]
-    Serde(#[from] serde_json::Error)
+    Serde(#[from] serde_json::Error),
 }
 
 pub struct Socket {
-    stream: UnixStream
+    stream: UnixStream,
 }
 
 impl Socket {
     pub async fn connect() -> Result<Self, Error> {
-        let xdg_os_string =
-            var_os("XDG_RUNTIME_DIR").ok_or(Error::MissingRuntimeDir)?;
+        let xdg_os_string = var_os("XDG_RUNTIME_DIR").ok_or(Error::MissingRuntimeDir)?;
 
         Ok(Self::connect_to(PathBuf::from(xdg_os_string).join(FEIRI_IPC_SOCK)).await?)
     }

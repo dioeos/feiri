@@ -1,6 +1,6 @@
 use feiri_core::{
     models::{Window, WindowId},
-    stores::WindowStore
+    stores::WindowStore,
 };
 
 use tracing::debug;

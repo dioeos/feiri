@@ -6,6 +6,7 @@ pub struct WindowStore {
     windows: RwLock<HashMap<WindowId, Window>>,
 }
 
+#[allow(clippy::new_without_default)]
 impl WindowStore {
     pub fn new() -> Self {
         Self {

@@ -1,9 +1,8 @@
-
 use std::sync::Arc;
 
-use feiri_core::models::{Mark, WindowId};
-use feiri_ipc::{QueryResponse, Query};
 use crate::services::{MarkService, WindowService};
+use feiri_core::models::{Mark, WindowId};
+use feiri_ipc::{Query, QueryResponse};
 
 use super::Error;
 

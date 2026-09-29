@@ -11,9 +11,7 @@ pub(crate) fn unwrap_send_result(
         Ok(response) => response,
         Err(err) => {
             error!("failed to sent request to niri: {err:#}");
-            return Err(CompositorError::FailedRequestCommunication(
-                err.to_string(),
-            ));
+            return Err(CompositorError::FailedRequestCommunication(err.to_string()));
         }
     };
 

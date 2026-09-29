@@ -77,7 +77,7 @@ mod tests {
 
     #[tokio::test]
     async fn inserts_and_gets_mark() {
-        let store = MarkStore::new();
+        let store = MarkStore::default();
         let id = WindowId(42);
 
         store.insert_mark(1, id).await;
@@ -87,14 +87,14 @@ mod tests {
 
     #[tokio::test]
     async fn returns_none_for_empty_requested_slot() {
-        let store = MarkStore::new();
+        let store = MarkStore::default();
 
         assert_eq!(store.get_mark(1).await, None);
     }
 
     #[tokio::test]
     async fn moves_existing_mark_to_requested() {
-        let store = MarkStore::new();
+        let store = MarkStore::default();
         let id = WindowId(67);
         store.insert_mark(1, id).await;
 
@@ -106,7 +106,7 @@ mod tests {
 
     #[tokio::test]
     async fn next_mark_wraps_when_index_overflows() {
-        let store = MarkStore::new();
+        let store = MarkStore::default();
         let id = WindowId(67);
         store.insert_mark(1, id).await;
 
@@ -116,7 +116,7 @@ mod tests {
 
     #[tokio::test]
     async fn prev_mark_wraps_when_index_underflows() {
-        let store = MarkStore::new();
+        let store = MarkStore::default();
         let id = WindowId(67);
         store.insert_mark(9, id).await;
 

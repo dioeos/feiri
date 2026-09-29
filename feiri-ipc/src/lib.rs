@@ -1,7 +1,7 @@
 #![allow(clippy::doc_lazy_continuation)]
 //! Types for communicating with Feiri via IPC.
 //!
-//! After connecting to the Feiri socket, you can send 
+//! After connecting to the Feiri socket, you can send
 //!
 //! ## Features
 //!
@@ -18,7 +18,6 @@ pub enum Request {
     Action(Action),
     Query(Query),
 }
-
 
 /// An action that mutates or navigates Feiri state.
 ///
@@ -79,8 +78,8 @@ pub enum Query {
     ListMarks,
 }
 
-/// A query response is the data corresponding to a particular query request that the 
-/// Feiri daemon received. 
+/// A query response is the data corresponding to a particular query request that the
+/// Feiri daemon received.
 #[derive(serde::Deserialize, serde::Serialize, Debug)]
 #[serde(tag = "type", content = "data", rename_all = "snake_case")]
 pub enum QueryResponse {
