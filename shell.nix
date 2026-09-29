@@ -50,6 +50,6 @@ pkgs.mkShell {
   RUST_SRC_PATH = "${pkgs.rustPlatform.rustLibSrc}";
 
   shellHook = ''
-    echo "Entered Fieri shell..."
+    echo "Entered Feiri shell..."
   '';
 }

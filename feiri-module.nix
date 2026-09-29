@@ -4,7 +4,7 @@ let
   cfg = config.services.feiri;
 in
 {
-  options.services.fieri = {
+  options.services.feiri = {
     enable = lib.mkEnableOption "Feiri";
 
     package = lib.mkOption {
