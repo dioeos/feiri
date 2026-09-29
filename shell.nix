@@ -1,7 +1,7 @@
 {
-  pkgs ? import <fieri-daemon-pkg> { },
-  fieri-daemon-pkg,
-  fieri-ui-pkg,
+  pkgs ? import <feiri-daemon-pkg> { },
+  feiri-daemon-pkg,
+  feiri-ui-pkg,
 }:
 
 let
@@ -22,8 +22,8 @@ let
 in
 pkgs.mkShell {
   inputsFrom = [
-    fieri-daemon-pkg
-    fieri-ui-pkg
+    feiri-daemon-pkg
+    feiri-ui-pkg
   ];
 
   LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [

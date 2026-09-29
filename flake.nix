@@ -10,33 +10,33 @@
     system = "x86_64-linux";
     pkgs = nixpkgs.legacyPackages.${system};
 
-    fieri-daemon-pkg = pkgs.rustPlatform.buildRustPackage {
-      pname = "fieri-daemon";
+    feiri-daemon-pkg = pkgs.rustPlatform.buildRustPackage {
+      pname = "feiri-daemon";
       version = "0.1.0";
 
       src = ./.;
       cargoLock.lockFile = ./Cargo.lock;
 
       cargoBuildFlags = [
-        "-p" "fieri-daemon"
-        "-p" "fieri-cli"
+        "-p" "feiri-daemon"
+        "-p" "feiri-cli"
       ];
     };
 
-    fieri-ui-pkg = pkgs.rustPlatform.buildRustPackage {
-      pname = "fieri-ui";
+    feiri-ui-pkg = pkgs.rustPlatform.buildRustPackage {
+      pname = "feiri-ui";
       version = "0.1.0";
 
       src = ./.;
       cargoLock.lockFile = ./Cargo.lock;
 
-      cargoBuildFlags = [ "-p" "fieri-ui" ];
+      cargoBuildFlags = [ "-p" "feiri-ui" ];
 
       nativeBuildInputs = [ pkgs.pkg-config pkgs.makeWrapper ];
       buildInputs = [ pkgs.fontconfig ];
 
       postFixup = ''
-        wrapProgram "$out/bin/fieri-ui" \
+        wrapProgram "$out/bin/feiri-ui" \
           --prefix LD_LIBRARY_PATH : "${pkgs.lib.makeLibraryPath [
             pkgs.wayland
             pkgs.libxkbcommon
@@ -49,17 +49,17 @@
       import ./shell.nix {
         inherit
         pkgs
-        fieri-daemon-pkg
-        fieri-ui-pkg;
+        feiri-daemon-pkg
+        feiri-ui-pkg;
       };
 
     packages.${system} = {
-      daemon = fieri-daemon-pkg;
-      ui = fieri-ui-pkg;
+      daemon = feiri-daemon-pkg;
+      ui = feiri-ui-pkg;
     };
 
     homeManagerModules.default =
-      import ./fieri-module.nix;
+      import ./feiri-module.nix;
   };
 }
 

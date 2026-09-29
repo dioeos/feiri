@@ -1,30 +1,30 @@
 { config, lib, pkgs, ... }:
 
 let
-  cfg = config.services.fieri;
+  cfg = config.services.feiri;
 in
 {
   options.services.fieri = {
-    enable = lib.mkEnableOption "Fieri daemon";
+    enable = lib.mkEnableOption "Feiri";
 
     package = lib.mkOption {
       type = lib.types.package;
-      description = "Package containing the fieri daemon executable";
+      description = "Package containing the feiri daemon and cli executable";
     };
 
     ui = {
-      enable = lib.mkEnableOption "Fieri UI";
+      enable = lib.mkEnableOption "Feiri UI";
 
       package = lib.mkOption {
         type = lib.types.package;
-        description = "Package containing the fieri ui executable";
+        description = "Package containing the feiri ui executable";
       };
     };
 
     environment = lib.mkOption {
       type = lib.types.attrsOf lib.types.str;
       default = { };
-      description = "Environment variables for the fieri daemon";
+      description = "Environment variables for the feiri daemon";
     };
 
   };
@@ -34,15 +34,15 @@ in
       cfg.package
     ] ++ lib.optional cfg.ui.enable cfg.ui.package;
 
-    systemd.user.services.fieri = {
+    systemd.user.services.feiri = {
       Unit = {
-        Description = "Fieri daemon";
+        Description = "Feiri daemon";
         PartOf = [ "graphical-session.target" ];
         After = [ "graphical-session.target" ];
       };
 
       Service = {
-        ExecStart = "${cfg.package}/bin/fieri-daemon";
+        ExecStart = "${cfg.package}/bin/feiri-daemon";
         Restart = "on-failure";
 
         Environment = lib.mapAttrsToList (
