@@ -33,7 +33,7 @@ Feiri consists of three executables:
 - `feiri-ui` is a supplemental add-on that makes working with Feiri easer.
 
 > ![NOTE]
-> **Install `feiri-daemon` and `fury` executables.** The CLI cannot manage state unless the daemon is running in your Niri session, and the daemon cannot be used via Niri unless the CLI is installed. The UI is completely optional and only improves experience.
+> Must install *both* `feiri-daemon` and `fury` executables. The CLI cannot manage state unless the daemon is running in your Niri session, and the daemon cannot be used via Niri unless the CLI is installed. The UI is completely optional and only improves experience.
 
 ### Nix
 The flake's `daemon` package for `x86_64-linux` contains *both* `feiri-daemon` and `fury`. Install and check availability via:
