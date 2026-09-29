@@ -1,23 +1,23 @@
-name: niqol CI
+name: feiri crates CI
 
 on:
   pull_request:
     paths:
-      - "Cargo.tml"
+      - "Cargo.toml"
       - "Cargo.lock"
       - "flake.nix"
-      - ".github/workflows/niqol-ci.yml"
+      - ".github/workflows/feiri-ci.yml"
   push:
     branches: [ main ]
     paths:
-      - "Cargo.tml"
+      - "Cargo.toml"
       - "Cargo.lock"
       - "flake.nix"
-      - ".github/workflows/niqol-ci.yml"
+      - ".github/workflows/feiri-ci.yml"
   workflow_dispatch:
 
 jobs:
-  nix-build-package:
+  nix-build-daemon-package:
     runs-on: ubuntu-latest
 
     steps:
@@ -28,7 +28,7 @@ jobs:
         uses: DeterminateSystems/nix-installer-action@main
 
       - name: Build niqol Nix package
-        run: nix build
+        run: nix build .#daemon
 
   lint:
     runs-on: ubuntu-latest
@@ -56,5 +56,5 @@ jobs:
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@main
 
-      - name: Check formatting
+      - name: Test
         run: nix develop -c cargo test
