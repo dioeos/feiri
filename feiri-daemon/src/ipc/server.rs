@@ -11,20 +11,25 @@ use tokio::{
     io::{AsyncBufReadExt, BufReader},
     net::{UnixListener, UnixStream},
 };
-use tracing::{info, warn};
+use tracing::{info, warn, debug};
 
-use crate::handlers::ActionHandler;
+use crate::handlers::{ActionHandler, QueryHandler};
 
 use super::error::Error;
 
 pub struct IpcServer {
     listener: UnixListener,
     action_handler: ActionHandler,
+    query_handler: QueryHandler,
     _lock: File,
 }
 
 impl IpcServer {
-    pub async fn new(path: PathBuf, action_handler: ActionHandler) -> Result<Self, Error> {
+    pub async fn new(
+        path: PathBuf,
+        action_handler: ActionHandler,
+        query_handler: QueryHandler,
+    ) -> Result<Self, Error> {
         let mut lock_name = path.as_os_str().to_os_string();
         lock_name.push(".lock");
 
@@ -77,6 +82,7 @@ impl IpcServer {
         Ok(Self {
             listener,
             action_handler,
+            query_handler,
             _lock: lock,
         })
     }
@@ -112,6 +118,10 @@ impl IpcServer {
         match request {
             Request::Action(action) => {
                 self.action_handler.handle_action_request(action).await?;
+            }
+            Request::Query(query) => {
+                let response = self.query_handler.handle_query_request(query).await?;
+                debug!(?response, "query answered");
             }
         }
         Ok(())

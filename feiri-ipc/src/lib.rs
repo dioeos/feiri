@@ -9,11 +9,14 @@
 //! - `clap`: derives the clap CLI parsing traits for the applicable traits. This
 //! feature is used internally by the Feiri daemon to support CLI functionality.
 
+use feiri_core::models::Mark;
+
 /// Request from client to Feiri daemon
 #[derive(serde::Deserialize, serde::Serialize)]
 pub enum Request {
     /// Peform an action
-    Action(Action)
+    Action(Action),
+    Query(Query),
 }
 
 
@@ -62,6 +65,27 @@ pub enum Action {
     /// For example, if the last focused mark slot was `2`, `PrevMark` request would
     /// focus slot `1`, if present.
     PrevMark,
+}
+
+/// A query request asks for the current state within the Feiri daemon.
+///
+/// Query requests are sent to the daemon and perform operations such as asking for all
+/// marks. They are sent by external applications, such as Feiri's `ui` crate.
+#[derive(serde::Deserialize, serde::Serialize, Debug, Clone)]
+#[serde(tag = "type", rename_all = "snake_case")]
+#[cfg_attr(feature = "clap", derive(clap::Subcommand))]
+pub enum Query {
+    /// Lists all marks currently stored by the daemon.
+    ListMarks,
+}
+
+/// A query response is the data corresponding to a particular query request that the 
+/// Feiri daemon received. 
+#[derive(serde::Deserialize, serde::Serialize, Debug)]
+#[serde(tag = "type", content = "data", rename_all = "snake_case")]
+pub enum QueryResponse {
+    /// All the marks currently stored within the daemon.
+    Marks(Vec<Mark>),
 }
 
 pub mod socket;

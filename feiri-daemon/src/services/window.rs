@@ -32,4 +32,8 @@ impl WindowService {
         );
         self.window_store.remove_window(window_id).await;
     }
+
+    pub async fn find_window(&self, window_id: WindowId) -> Option<Window> {
+        self.window_store.get_window(window_id).await
+    }
 }

@@ -11,7 +11,7 @@ use tokio::sync::mpsc::{self, Receiver, Sender};
 use tracing::info;
 use tracing_subscriber::{EnvFilter, fmt};
 
-use crate::handlers::ActionHandler;
+use crate::handlers::{ActionHandler, QueryHandler};
 use crate::niri::WindowManager;
 use crate::{
     ipc::IpcServer,
@@ -46,9 +46,10 @@ async fn main() -> Result<(), anyhow::Error> {
     let niri_listener = Listener::new(niri_socket_for_listener, niri_evt_tx);
 
     let mark_service = Arc::new(MarkService::new(niri_window_manager));
-    let window_service = WindowService::new();
+    let window_service = Arc::new(WindowService::new());
 
-    let niri_event_handler = EventHandler::new(Arc::clone(&mark_service), window_service);
+    let niri_event_handler =
+        EventHandler::new(Arc::clone(&mark_service), Arc::clone(&window_service));
 
     let xdg_os_string =
         var_os("XDG_RUNTIME_DIR").context("XDG_RUNTIME_DIR environment variable is not set")?;
@@ -57,15 +58,15 @@ async fn main() -> Result<(), anyhow::Error> {
     feiri_ipc_path.push(FEIRI_IPC_SOCK);
 
     let action_handler = ActionHandler::new(Arc::clone(&mark_service));
+    let query_handler = QueryHandler::new(Arc::clone(&mark_service), Arc::clone(&window_service));
 
-    let ipc_server = Arc::new(IpcServer::new(feiri_ipc_path, action_handler).await?);
+    let ipc_server = Arc::new(IpcServer::new(feiri_ipc_path, action_handler, query_handler).await?);
     info!("ipc server running...");
 
     //@TODO: Switch to old async niri stream reader
     tokio::try_join!(
         async move {
-            tokio::task::spawn_blocking(move || niri_listener.run())
-                .await??;
+            tokio::task::spawn_blocking(move || niri_listener.run()).await??;
             Ok::<(), anyhow::Error>(())
         },
         async {

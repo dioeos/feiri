@@ -1,4 +1,4 @@
-use feiri_ipc::Action;
+use feiri_ipc::{Action, Query};
 
 #[derive(clap::Parser)]
 pub struct Cli {
@@ -19,6 +19,10 @@ pub enum Sub {
 pub enum Msg {
     Action {
         #[command(subcommand)]
-        action: Action
+        action: Action,
+    },
+    Query {
+        #[command(subcommand)]
+        query: Query
     }
 }

@@ -11,11 +11,11 @@ use crate::{
 #[allow(dead_code)]
 pub struct EventHandler {
     mark_service: Arc<MarkService>,
-    window_service: WindowService,
+    window_service: Arc<WindowService>,
 }
 
 impl EventHandler {
-    pub fn new(mark_service: Arc<MarkService>, window_service: WindowService) -> Self {
+    pub fn new(mark_service: Arc<MarkService>, window_service: Arc<WindowService>) -> Self {
         Self {
             mark_service,
             window_service,

@@ -2,8 +2,8 @@ use anyhow::Context;
 use clap::Parser;
 use feiri_cli::{Cli, Msg, Sub};
 use feiri_ipc::Request;
-use tracing_subscriber::{EnvFilter, fmt};
 use tracing::debug;
+use tracing_subscriber::{EnvFilter, fmt};
 
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
@@ -29,8 +29,15 @@ async fn main() -> Result<(), anyhow::Error> {
                 socket
                     .send(Request::Action(action.clone()))
                     .await
-                    .context("Failed to send Feiri IPC request")?;
+                    .context("Failed to send Feiri IPC action")?;
                 debug!(?action, "sent msg");
+            }
+            Msg::Query { query } => {
+                socket
+                    .send(Request::Query(query.clone()))
+                    .await
+                    .context("Failed to send Feiri IPC query")?;
+                debug!(?query, "sent msg");
             }
         }
     }
