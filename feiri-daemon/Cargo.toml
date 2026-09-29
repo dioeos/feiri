@@ -1,0 +1,20 @@
+[package]
+name = "feiri-daemon"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+feiri-core = { path = "../feiri-core" }
+feiri-ipc = { path = "../feiri-ipc" }
+async-trait.workspace = true
+anyhow.workspace = true
+clap.workspace = true
+tokio.workspace = true
+niri-ipc.workspace = true
+serde_json.workspace = true
+serde.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+thiserror.workspace = true
+dotenvy.workspace = true

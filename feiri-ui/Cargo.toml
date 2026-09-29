@@ -1,0 +1,21 @@
+[package]
+name = "feiri-ui"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace  =true
+
+[dependencies]
+feiri-core = { path = "../feiri-core" }
+feiri-ipc = { path = "../feiri-ipc" }
+dotenvy.workspace = true
+serde_json.workspace = true
+serde.workspace = true
+slint.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+[build-dependencies]
+slint-build = "1.18.1"
+

@@ -1,0 +1,48 @@
+use feiri_core::models::{Window, WindowId};
+use niri_ipc::{Action, Request, Response, socket::Socket};
+
+use super::{error::CompositorError, util};
+use crate::niri::conversions::IntoFeiriWindow;
+pub struct WindowManager {
+    socket: Socket,
+}
+
+impl WindowManager {
+    pub fn new(socket: Socket) -> Self {
+        Self { socket }
+    }
+
+    pub async fn get_focused_window(&mut self) -> Result<Option<Window>, CompositorError> {
+        let request = Request::FocusedWindow;
+        let send_result = self.socket.send(request);
+
+        let response = util::unwrap_send_result(send_result)?;
+
+        let niri_window = match response {
+            Response::FocusedWindow(Some(window)) => Some(window),
+            Response::FocusedWindow(None) => None,
+            other => {
+                return Err(CompositorError::UnexpectedResponse(format!("{other:?}")))?;
+            }
+        };
+
+        let Some(niri_window) = niri_window else {
+            return Ok(None);
+        };
+
+        Ok(Some(niri_window.into_feiri_window()))
+    }
+
+    pub async fn focus_window(&mut self, id: WindowId) -> Result<(), CompositorError> {
+        let action = Action::FocusWindow { id: id.0 };
+        let request = Request::Action(action);
+        let send_result = self.socket.send(request);
+
+        let response = util::unwrap_send_result(send_result)?;
+
+        match response {
+            Response::Handled => Ok(()),
+            other => Err(CompositorError::UnexpectedResponse(format!("{other:?}"))),
+        }
+    }
+}

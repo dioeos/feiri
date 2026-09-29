@@ -1,16 +1,16 @@
 [workspace]
 resolver = "3"
 members = [
-    "crates/daemon",
-    "crates/cli",
-    "crates/niri",
-    "crates/core",
-    "crates/ui",
-    "crates/ipc"
+    "feiri-cli",
+    "feiri-core",
+    "feiri-daemon",
+    "feiri-ipc",
+    "feiri-ui"
 ]
 
 [workspace.dependencies]
 anyhow = "1.0"
+clap = { version = "4.6.6", features = ["derive"] }
 tokio = { version = "1.53.1", features = ["full"] }
 niri-ipc = "=26.4.0"
 serde_json = "1.0"

@@ -25,7 +25,7 @@
 
 ## Features
 
-## Why Fieri?
+## Why Feiri?
 
-Got too tired of having to manually switch between frequently used windows and having to mentally track where the important stuff was. Wanting to have [marks.nvim](https://github.com/chentoast/marks.nvim) and [harpoon](https://github.com/theprimeagen/harpoon) functionality with my windows and tabs, I created Fieri. On paper, the second difference (measured in `timer.py`) in navigation does not seem like a lot, but it does save a lot of effort...
+Got too tired of having to manually switch between frequently used windows and having to mentally track where the important stuff was. Wanting to have [marks.nvim](https://github.com/chentoast/marks.nvim) and [harpoon](https://github.com/theprimeagen/harpoon) functionality with my windows and tabs, I created Feiri. On paper, the second difference (measured in `scripts/timer.py`) in navigation does not seem like a lot, but it does save a lot of effort...
 

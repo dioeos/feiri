@@ -1,0 +1,64 @@
+name: feiri crates CI
+
+on:
+  pull_request:
+    paths:
+       - "**/*.rs"
+       - "**/Cargo.toml"
+       - "Cargo.lock"
+       - "flake.nix"
+       - "flake.lock"
+       - ".github/workflows/feiri-crates-ci.yml"
+  push:
+    branches: [ main ]
+    paths:
+       - "**/*.rs"
+       - "**/Cargo.toml"
+       - "Cargo.lock"
+       - "flake.nix"
+       - "flake.lock"
+       - ".github/workflows/feiri-crates-ci.yml"
+  workflow_dispatch:
+
+jobs:
+  nix-build-daemon-package:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+
+      - name: Build Feiri Nix package
+        run: nix build .#daemon
+
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+
+      - name: Check formatting
+        run : nix develop .#ci -c cargo fmt --check
+
+      - name: Clippy
+        run: nix develop .#ci -c cargo clippy --all-targets --all-features -- -D warnings
+
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+
+      - name: Test
+        run: nix develop .#ci -c cargo test
