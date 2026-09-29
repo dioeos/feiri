@@ -1,5 +1,5 @@
 {
-  description = "Fieri flake";
+  description = "Feiri flake";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-26.05";
@@ -21,6 +21,11 @@
         "-p" "feiri-daemon"
         "-p" "feiri-cli"
       ];
+      # The check phase runs `cargo test` separately; don't compile the UI here.
+      cargoTestFlags = [
+        "-p" "feiri-daemon"
+        "-p" "feiri-cli"
+      ];
     };
 
     feiri-ui-pkg = pkgs.rustPlatform.buildRustPackage {
@@ -31,6 +36,7 @@
       cargoLock.lockFile = ./Cargo.lock;
 
       cargoBuildFlags = [ "-p" "feiri-ui" ];
+      cargoTestFlags = [ "-p" "feiri-ui" ];
 
       nativeBuildInputs = [ pkgs.pkg-config pkgs.makeWrapper ];
       buildInputs = [ pkgs.fontconfig ];
