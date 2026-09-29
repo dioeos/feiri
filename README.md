@@ -32,7 +32,7 @@ Feiri consists of three executables:
 - `fury` is the CLI used by Niri keybindings to send commands to the daemon.
 - `feiri-ui` is a supplemental add-on that makes working with Feiri easer.
 
-> ![NOTE]
+> [!NOTE]
 > Must install *both* `feiri-daemon` and `fury` executables. The CLI cannot manage state unless the daemon is running in your Niri session, and the daemon cannot be used via Niri unless the CLI is installed. The UI is completely optional and only improves experience.
 
 ### Nix
