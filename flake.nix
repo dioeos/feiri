@@ -51,13 +51,28 @@
     };
   in
   {
-    devShells.${system}.default =
-      import ./shell.nix {
-        inherit
-        pkgs
-        feiri-daemon-pkg
-        feiri-ui-pkg;
+    devShells.${system} = {
+      default =
+        import ./shell.nix {
+          inherit
+          pkgs
+          feiri-daemon-pkg
+          feiri-ui-pkg;
+        };
+
+      #@NOTE: CI lightweight shell (does not include inputs to build Slint UI yet)
+      ci = pkgs.mkShell {
+        inputsFrom = [
+          feiri-daemon-pkg
+          feiri-ui-pkg
+        ];
+
+        packages = with pkgs; [
+          rustfmt
+          clippy
+        ];
       };
+    };
 
     packages.${system} = {
       daemon = feiri-daemon-pkg;
