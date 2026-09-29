@@ -1,7 +1,7 @@
 #![allow(clippy::doc_lazy_continuation)]
 //! Types for communicating with Feiri via IPC.
 //!
-//! After connecting to the Feiri socket, you can send
+//! After connecting to the Feiri socket, you can send [`Request`]s.
 //!
 //! ## Features
 //!
@@ -14,7 +14,31 @@ use feiri_core::models::Mark;
 /// Request from client to Feiri daemon
 #[derive(serde::Deserialize, serde::Serialize)]
 pub enum Request {
-    /// Peform an action
+    /// Peform an operation
+    Operation(Command),
+    /// Receive events from the daemon continuously.
+    EventStream
+}
+
+/// Reply from Feiri daemon to client.
+///
+/// Every request receives on reply.
+///
+/// * If an error had occured during the daemon's handling of the request, the reply will be an `Reply::Err`.
+/// * If the request does not need any particular response, the reply will be an `Reply::Ok(Response::Handled`.
+/// * Otherwise, it will be `Reply::Ok(response)` with one of the other [`Response`] variants.
+pub type Reply = Result<Response, String>;
+
+/// Successful response from Feiri to client
+#[derive(serde::Deserialize, serde::Serialize)]
+pub enum Response {
+    Handled,
+    Query(QueryResponse)
+}
+
+/// A type of request that performs a one-shot command to the daemon
+#[derive(serde::Deserialize, serde::Serialize)]
+pub enum Command {
     Action(Action),
     Query(Query),
 }
@@ -85,6 +109,17 @@ pub enum Query {
 pub enum QueryResponse {
     /// All the marks currently stored within the daemon.
     Marks(Vec<Mark>),
+}
+
+/// A daemon event
+#[derive(serde::Deserialize, serde::Serialize, Debug, Clone)]
+#[serde(tag = "type", content = "data", rename_all = "snake_case")]
+pub enum Event {
+    /// The marks confiuguration has changed.
+    MarksChanged { 
+        /// The new marks configuration.
+        marks: Vec<Mark> 
+    },
 }
 
 pub mod socket;

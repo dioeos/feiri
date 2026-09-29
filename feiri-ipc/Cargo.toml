@@ -11,6 +11,8 @@ serde_json.workspace = true
 serde.workspace = true
 thiserror.workspace = true
 tokio.workspace = true
+futures-core = "0.3.34"
+tokio-stream.workspace = true
 
 [features]
 clap = ["dep:clap"]

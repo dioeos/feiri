@@ -1,12 +1,19 @@
 #![allow(dead_code, unused_variables)]
 use std::{rc::Rc, sync::Arc};
 
+use feiri_ipc::{Request, Response, socket::Socket};
 use slint::VecModel;
-use tokio::{runtime, sync::Mutex};
-use tracing::info;
+use tokio::{
+    runtime,
+    sync::{Mutex, OnceCell},
+};
+use tokio_stream::StreamExt;
+use tracing::{error, info, debug};
 use tracing_subscriber::{EnvFilter, fmt};
 
 slint::include_modules!();
+
+static IPC_SOCKET_CELL: OnceCell<Arc<Mutex<Socket>>> = OnceCell::const_new();
 
 fn main() -> Result<(), slint::PlatformError> {
     dotenvy::dotenv().ok();
@@ -41,8 +48,46 @@ fn main() -> Result<(), slint::PlatformError> {
     ui.set_marks(marks_model.into());
 
     let weak_ui = ui.as_weak();
-    // tokio::spawn(async move {
-    // });
 
-    Ok(())
+    let connect_feiri_ipc_future = async move {};
+
+    tokio::spawn(async move {
+        // let mut socket_cell = use_ipc_event_socket_cell().await;
+        // let socket = *socket_cell.lock().await;
+        let mut socket = match Socket::connect().await {
+            Ok(socket) => socket,
+            Err(err) => {
+                error!("failed to connect to socket");
+                return;
+            }
+        };
+
+        let reply = match socket.send(Request::EventStream).await {
+            Ok(reply) => reply,
+            Err(err) => {
+                error!("failed to request event stream");
+                return;
+            }
+        };
+
+        if !matches!(reply, Ok(Response::Handled)) {
+            error!("daemon failed to acknowledge event stream request");
+            return;
+        }
+
+        //returns impl Stream<Item = Result<Event, Error>>, giving a stream to iterate
+        let mut events = socket.read_events().await;
+
+        while let Some(event_result) = events.next().await {
+            match event_result {
+                Ok(event) => debug!("Received event: {event:?}"),
+                Err(err) => {
+                    error!("failed to read event: {err:?}");
+                    break;
+                }
+            }
+        }
+    });
+
+    ui.run()
 }

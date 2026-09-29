@@ -1,8 +1,13 @@
 use std::{env::var_os, io, path::PathBuf};
 
-use tokio::{io::AsyncWriteExt, net::UnixStream};
+use futures_core::Stream;
+use tokio::{
+    io::{AsyncBufReadExt, AsyncWriteExt, BufReader},
+    net::UnixStream,
+};
+use tokio_stream::{StreamExt, wrappers::LinesStream};
 
-use crate::Request;
+use crate::{Event, Reply, Request};
 
 pub const FEIRI_IPC_SOCK: &str = "feiri-ipc.sock";
 
@@ -19,7 +24,7 @@ pub enum Error {
 }
 
 pub struct Socket {
-    stream: UnixStream,
+    stream: BufReader<UnixStream>,
 }
 
 impl Socket {
@@ -30,19 +35,42 @@ impl Socket {
     }
 
     pub async fn connect_to(path: PathBuf) -> io::Result<Self> {
-        // let stream = UnixStream::connect(path).await?;
-        // let stream = BufReader::new(stream);
-        // Ok(Self { stream })
-        Ok(Self {
-            stream: UnixStream::connect(path).await?,
-        })
+        let stream = UnixStream::connect(path).await?;
+        let stream = BufReader::new(stream);
+        Ok(Self { stream })
     }
 
-    pub async fn send(&mut self, request: Request) -> Result<(), Error> {
-        let mut bytes = serde_json::to_vec(&request)?;
-        bytes.push(b'\n');
-        self.stream.write_all(&bytes).await?;
-        self.stream.shutdown().await?;
-        Ok(())
+    pub async fn send(&mut self, request: Request) -> Result<Reply, Error> {
+        let mut buf = serde_json::to_string(&request)?;
+        buf.push('\n');
+        self.stream.get_mut().write_all(buf.as_bytes()).await?;
+
+        buf.clear();
+        self.stream.read_line(&mut buf).await?;
+
+        let reply = serde_json::from_str(&buf)?;
+        Ok(reply)
+    }
+
+    /// Reads event stream [`Event`]s from the socket that the Feiri daemon emits.
+    ///
+    /// The returned function will yield until the next [`Event`] arrives, returning it.
+    ///
+    /// This function should only be used after requesting [`EventStream`][Request::EventStream]
+    pub async fn read_events(self) -> impl Stream<Item = Result<Event, Error>> {
+        let Self { stream } = self;
+        let (reader, mut writer) = stream.into_inner().into_split();
+
+        writer.shutdown().await.unwrap();
+
+        let reader = BufReader::new(reader);
+        let lines = LinesStream::new(reader.lines());
+
+        lines.map(|line| {
+            //a line yields value of io::Result<Option<String>>
+            let line = line?;
+            let event = serde_json::from_str(&line)?;
+            Ok(event)
+        })
     }
 }

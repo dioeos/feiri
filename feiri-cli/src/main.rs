@@ -1,7 +1,7 @@
 use anyhow::Context;
 use clap::Parser;
 use feiri_cli::{Cli, Msg, Sub};
-use feiri_ipc::Request;
+use feiri_ipc::{Command, Request};
 use tracing::debug;
 use tracing_subscriber::{EnvFilter, fmt};
 
@@ -27,14 +27,14 @@ async fn main() -> Result<(), anyhow::Error> {
         match msg {
             Msg::Action { action } => {
                 socket
-                    .send(Request::Action(action.clone()))
+                    .send(Request::Operation(Command::Action(action.clone())))
                     .await
                     .context("Failed to send Feiri IPC action")?;
                 debug!(?action, "sent msg");
             }
             Msg::Query { query } => {
                 socket
-                    .send(Request::Query(query.clone()))
+                    .send(Request::Operation(Command::Query(query.clone())))
                     .await
                     .context("Failed to send Feiri IPC query")?;
                 debug!(?query, "sent msg");

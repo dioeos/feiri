@@ -7,6 +7,7 @@ use std::{env::var_os, path::PathBuf, sync::Arc};
 
 use anyhow::Context;
 use tokio::sync::Mutex;
+use tokio::sync::broadcast::{Receiver as BroadcastReceiver, Sender as BroadcastSender};
 use tokio::sync::mpsc::{self, Receiver, Sender};
 use tracing::info;
 use tracing_subscriber::{EnvFilter, fmt};
@@ -41,6 +42,11 @@ async fn main() -> Result<(), anyhow::Error> {
     let (niri_evt_tx, mut niri_evt_rx): (Sender<niri_ipc::Event>, Receiver<niri_ipc::Event>) =
         mpsc::channel(32);
 
+    let (daemon_evt_tx, _): (
+        BroadcastSender<feiri_ipc::Event>,
+        BroadcastReceiver<feiri_ipc::Event>,
+    ) = tokio::sync::broadcast::channel(32);
+
     let niri_window_manager = Mutex::new(WindowManager::new(niri_socket_for_window_manager));
 
     let niri_listener = Listener::new(niri_socket_for_listener, niri_evt_tx);
@@ -57,10 +63,16 @@ async fn main() -> Result<(), anyhow::Error> {
     let mut feiri_ipc_path = PathBuf::from(xdg_os_string);
     feiri_ipc_path.push(FEIRI_IPC_SOCK);
 
-    let action_handler = ActionHandler::new(Arc::clone(&mark_service));
+    let action_handler = ActionHandler::new(
+        Arc::clone(&mark_service),
+        Arc::clone(&window_service),
+        daemon_evt_tx.clone(),
+    );
     let query_handler = QueryHandler::new(Arc::clone(&mark_service), Arc::clone(&window_service));
 
-    let ipc_server = Arc::new(IpcServer::new(feiri_ipc_path, action_handler, query_handler).await?);
+    let ipc_server = Arc::new(
+        IpcServer::new(feiri_ipc_path, action_handler, query_handler, daemon_evt_tx).await?,
+    );
     info!("ipc server running...");
 
     //@TODO: Switch to old async niri stream reader
