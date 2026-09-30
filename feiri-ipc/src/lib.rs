@@ -17,7 +17,7 @@ pub enum Request {
     /// Peform an operation
     Operation(Command),
     /// Receive events from the daemon continuously.
-    EventStream
+    EventStream,
 }
 
 /// Reply from Feiri daemon to client.
@@ -33,7 +33,7 @@ pub type Reply = Result<Response, String>;
 #[derive(serde::Deserialize, serde::Serialize, Debug)]
 pub enum Response {
     Handled,
-    Query(QueryResponse)
+    Query(QueryResponse),
 }
 
 /// A type of request that performs a one-shot command to the daemon
@@ -116,9 +116,9 @@ pub enum QueryResponse {
 #[serde(tag = "type", content = "data", rename_all = "snake_case")]
 pub enum Event {
     /// The marks confiuguration has changed.
-    MarksChanged { 
+    MarksChanged {
         /// The new marks configuration.
-        marks: Vec<Mark> 
+        marks: Vec<Mark>,
     },
 }
 

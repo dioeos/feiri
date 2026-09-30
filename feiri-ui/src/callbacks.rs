@@ -11,7 +11,7 @@ use super::error::Error;
 pub async fn handle_event(
     event: feiri_ipc::Event,
     marks_state: Arc<Mutex<Vec<MarkRowItem>>>,
-    weak_ui: slint::Weak<AppWindow>
+    weak_ui: slint::Weak<AppWindow>,
 ) -> Result<(), Error> {
     match event {
         Event::MarksChanged { marks } => {

@@ -33,7 +33,7 @@ async fn main() -> Result<(), anyhow::Error> {
 
                 let response = match reply {
                     Ok(response) => response,
-                    Err(err) => bail!("Errror handling request: {err:?}")
+                    Err(err) => bail!("Errror handling request: {err:?}"),
                 };
 
                 if !matches!(response, Response::Handled) {
@@ -48,7 +48,7 @@ async fn main() -> Result<(), anyhow::Error> {
 
                 let response = match reply {
                     Ok(response) => response,
-                    Err(err) => bail!("Error handling request: {err:?}")
+                    Err(err) => bail!("Error handling request: {err:?}"),
                 };
 
                 println!("{response:?}");

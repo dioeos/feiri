@@ -51,5 +51,5 @@ pub enum Error {
     UnexpectedIpcServerFailure(String),
 
     #[error("{self:?}")]
-    FailedToReadClientRequest(#[source] std::io::Error)
+    FailedToReadClientRequest(#[source] std::io::Error),
 }

@@ -15,9 +15,7 @@ pub struct MarkService {
 
 #[allow(dead_code)]
 impl MarkService {
-    pub fn new(
-        window_manager: Mutex<WindowManager>,
-    ) -> Self {
+    pub fn new(window_manager: Mutex<WindowManager>) -> Self {
         Self {
             mark_store: Arc::new(MarkStore::default()),
             window_manager,

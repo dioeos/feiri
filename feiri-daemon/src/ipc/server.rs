@@ -11,7 +11,7 @@ use tokio::{
     io::{AsyncBufReadExt, AsyncWriteExt, BufReader},
     net::{UnixListener, UnixStream},
 };
-use tracing::{debug, info, warn};
+use tracing::{info, warn};
 
 use crate::handlers::{ActionHandler, QueryHandler};
 

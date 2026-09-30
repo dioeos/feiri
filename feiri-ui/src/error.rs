@@ -1,4 +1,3 @@
-
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("{self:?}")]
@@ -17,5 +16,5 @@ pub enum Error {
     UnexpectedIpcResponse {
         expected: feiri_ipc::Response,
         received: feiri_ipc::Response,
-    }
+    },
 }

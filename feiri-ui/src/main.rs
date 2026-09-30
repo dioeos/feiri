@@ -9,7 +9,7 @@ use feiri_ipc::{Reply, Request, Response, socket::Socket};
 use slint::VecModel;
 use tokio::{runtime, sync::Mutex};
 use tokio_stream::StreamExt;
-use tracing::{debug, error, info};
+use tracing::{error, info};
 use tracing_subscriber::{EnvFilter, fmt};
 
 slint::include_modules!();
