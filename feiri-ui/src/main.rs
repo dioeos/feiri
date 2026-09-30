@@ -5,7 +5,7 @@ use error::Error;
 
 use std::{rc::Rc, sync::Arc};
 
-use feiri_ipc::{Reply, Request, Response, socket::Socket};
+use feiri_ipc::{Action, Command, Reply, Request, Response, socket::Socket};
 use slint::VecModel;
 use tokio::{runtime, sync::Mutex};
 use tokio_stream::StreamExt;
@@ -107,6 +107,35 @@ fn main() -> Result<(), Error> {
             error!("failed to spawn search: {err:?}");
         }
     });
+
+    ui.on_return_requested(move |current_index| {
+        tokio::spawn(async move {
+            let mut socket = Socket::connect().await?;
+            let slot = match u8::try_from(current_index) {
+                Ok(val) => val,
+                Err(_) => return Err(Error::FailedToConvertIndexToSlot),
+            };
+            let action = Action::FocusMark { slot };
+
+            let reply = socket
+                .send(Request::Operation(Command::Action(action)))
+                .await?;
+
+            let response = match reply {
+                Ok(response) => response,
+                Err(message) => return Err(Error::FeiriErrorRequest(message.to_string())),
+            };
+
+            if !matches!(response, Response::Handled) {
+                return Err(Error::UnexpectedIpcResponse {
+                    expected: Response::Handled,
+                    received: response,
+                });
+            }
+            Ok::<(), Error>(())
+        });
+    });
+
     ui.run()?;
 
     Ok(())
