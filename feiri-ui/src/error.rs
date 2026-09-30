@@ -26,4 +26,7 @@ pub enum Error {
 
     #[error("The UI window has been dropped and is no longer available")]
     UIDropped,
+
+    #[error("{self:?}")]
+    FailedToConvertIndexToSlot,
 }
