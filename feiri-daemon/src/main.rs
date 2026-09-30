@@ -47,7 +47,7 @@ async fn main() -> Result<(), anyhow::Error> {
         BroadcastReceiver<feiri_ipc::Event>,
     ) = tokio::sync::broadcast::channel(32);
 
-    let niri_window_manager = Mutex::new(WindowManager::new(niri_socket_for_window_manager));
+    let niri_window_manager = WindowManager::new(Mutex::new(niri_socket_for_window_manager));
 
     let niri_listener = Listener::new(niri_socket_for_listener, niri_evt_tx);
 
@@ -75,7 +75,12 @@ async fn main() -> Result<(), anyhow::Error> {
     );
     info!("ipc server running...");
 
-    //@TODO: Switch to old async niri stream reader
+    //@NOTE: At baseline state, the program has 2 baseline tasks + 1 task per active IPC handler
+    //       
+    //       * Main Async Task - Runs the IPC accept loop and processes niri events
+    //       * Blocking Task - Reads niri events and sends to channel
+    //       [x] Per-command async task - Handles IPC command request
+    //       [x] Per-event-stream async task - Long living and forwards daemon events to subscribers
     tokio::try_join!(
         async move {
             tokio::task::spawn_blocking(move || niri_listener.run()).await??;

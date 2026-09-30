@@ -1,20 +1,22 @@
 use feiri_core::models::{Window, WindowId};
 use niri_ipc::{Action, Request, Response, socket::Socket};
+use tokio::sync::Mutex;
 
 use super::{error::CompositorError, util};
 use crate::niri::conversions::IntoFeiriWindow;
 pub struct WindowManager {
-    socket: Socket,
+    socket: Mutex<Socket>,
 }
 
 impl WindowManager {
-    pub fn new(socket: Socket) -> Self {
+    pub fn new(socket: Mutex<Socket>) -> Self {
         Self { socket }
     }
 
-    pub async fn get_focused_window(&mut self) -> Result<Option<Window>, CompositorError> {
+    pub async fn get_focused_window(&self) -> Result<Option<Window>, CompositorError> {
         let request = Request::FocusedWindow;
-        let send_result = self.socket.send(request);
+        let mut socket_guard = self.socket.lock().await;
+        let send_result = socket_guard.send(request);
 
         let response = util::unwrap_send_result(send_result)?;
 
@@ -33,10 +35,11 @@ impl WindowManager {
         Ok(Some(niri_window.into_feiri_window()))
     }
 
-    pub async fn focus_window(&mut self, id: WindowId) -> Result<(), CompositorError> {
+    pub async fn focus_window(&self, id: WindowId) -> Result<(), CompositorError> {
         let action = Action::FocusWindow { id: id.0 };
         let request = Request::Action(action);
-        let send_result = self.socket.send(request);
+        let mut socket_guard = self.socket.lock().await;
+        let send_result = socket_guard.send(request);
 
         let response = util::unwrap_send_result(send_result)?;
 
