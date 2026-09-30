@@ -33,11 +33,23 @@ pub enum Error {
     FailedToAcceptIncomingConnection(#[source] std::io::Error),
 
     #[error("{self:?}")]
-    FailedToReadStreamRequest(#[source] std::io::Error),
-
-    #[error("{self:?}")]
     FailedToSerializeRequest(#[source] serde_json::Error),
 
     #[error("{self:?}")]
+    FailedToWriteResponse(#[source] std::io::Error),
+
+    #[error("{self:?}")]
+    FailedToConvertMsgToBytes(#[source] serde_json::Error),
+
+    #[error("{self:?}")]
+    FailedToWriteEvent(#[source] std::io::Error),
+
+    #[error("{self:?}")]
+    FailedToAckSuccessfulEventStream(#[source] std::io::Error),
+
+    #[error("{self:?}")]
     UnexpectedIpcServerFailure(String),
+
+    #[error("{self:?}")]
+    FailedToReadClientRequest(#[source] std::io::Error),
 }

@@ -12,6 +12,7 @@ members = [
 anyhow = "1.0"
 clap = { version = "4.6.6", features = ["derive"] }
 tokio = { version = "1.53.1", features = ["full"] }
+tokio-stream = { version = "0.1.19", features = ["io-util"] }
 niri-ipc = "=26.4.0"
 serde_json = "1.0"
 serde = { version = "1.0.229", features = ["derive"] }
