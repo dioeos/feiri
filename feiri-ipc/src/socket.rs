@@ -40,7 +40,19 @@ impl Socket {
         Ok(Self { stream })
     }
 
+    /// Sends a request to Feiri daemon and returns the response
+    ///
+    /// Return values:
+    ///
+    /// * `Ok(Ok(Response))`: successul [`Response`](crate::Response) from Feiri
+    /// * `Ok(Err(message))`: error message from Feiri
+    /// * `Err(err)`: error communicating with Feiri's IPC
     pub async fn send(&mut self, request: Request) -> Result<Reply, Error> {
+        //@NOTE: The IPC handlers in `feiri/daemon/src/ipc/server.rs` can return internal errors.
+        //       To represent this, the type `pub type Reply = Result<Response, String>`. This function
+        //       there returns `Result<Result<Response, String>>, where the outermost result contains
+        //       an IPC error defined here while the innermost result contains an error that comes from
+        //       the daemon's internal handler logic.
         let mut buf = serde_json::to_string(&request)?;
         buf.push('\n');
         self.stream.get_mut().write_all(buf.as_bytes()).await?;

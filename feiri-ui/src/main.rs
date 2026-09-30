@@ -1,19 +1,18 @@
-#![allow(dead_code, unused_variables)]
+mod callbacks;
+mod error;
+
+use error::Error;
+
 use std::{rc::Rc, sync::Arc};
 
-use feiri_ipc::{Request, Response, socket::Socket};
+use feiri_ipc::{Reply, Request, Response, socket::Socket};
 use slint::VecModel;
-use tokio::{
-    runtime,
-    sync::{Mutex, OnceCell},
-};
+use tokio::{runtime, sync::Mutex};
 use tokio_stream::StreamExt;
-use tracing::{error, info, debug};
+use tracing::{debug, error, info};
 use tracing_subscriber::{EnvFilter, fmt};
 
 slint::include_modules!();
-
-static IPC_SOCKET_CELL: OnceCell<Arc<Mutex<Socket>>> = OnceCell::const_new();
 
 fn main() -> Result<(), slint::PlatformError> {
     dotenvy::dotenv().ok();
@@ -42,37 +41,29 @@ fn main() -> Result<(), slint::PlatformError> {
     //       `Send`, making it incorrect choice to wrap the state. The `all_marks_state` role is to
     //       share state between the tokio background worker thread and the main Slint event thread.
     let all_marks_state = Arc::new(Mutex::new(Vec::<MarkRowItem>::new()));
-    let all_marks_state_for_initial_load = Arc::clone(&all_marks_state);
+    let all_marks_state_for_event_stream = Arc::clone(&all_marks_state);
 
     let marks_model = Rc::new(VecModel::<MarkRowItem>::default());
     ui.set_marks(marks_model.into());
 
     let weak_ui = ui.as_weak();
 
-    let connect_feiri_ipc_future = async move {};
-
     tokio::spawn(async move {
-        // let mut socket_cell = use_ipc_event_socket_cell().await;
-        // let socket = *socket_cell.lock().await;
-        let mut socket = match Socket::connect().await {
-            Ok(socket) => socket,
-            Err(err) => {
-                error!("failed to connect to socket");
-                return;
-            }
+        let mut socket = Socket::connect().await?;
+        //socket can return errors defined in `socket::Error`
+        //unwraps the outermost error representing failed communication with Feiri
+        let reply: Reply = socket.send(Request::EventStream).await?;
+
+        let response = match reply {
+            Ok(response) => response,
+            Err(message) => return Err(Error::FeiriErrorRequest(message.to_string())),
         };
 
-        let reply = match socket.send(Request::EventStream).await {
-            Ok(reply) => reply,
-            Err(err) => {
-                error!("failed to request event stream");
-                return;
-            }
-        };
-
-        if !matches!(reply, Ok(Response::Handled)) {
-            error!("daemon failed to acknowledge event stream request");
-            return;
+        if !matches!(response, Response::Handled) {
+            return Err(Error::UnexpectedIpcResponse {
+                expected: Response::Handled,
+                received: response,
+            });
         }
 
         //returns impl Stream<Item = Result<Event, Error>>, giving a stream to iterate
@@ -80,14 +71,22 @@ fn main() -> Result<(), slint::PlatformError> {
 
         while let Some(event_result) = events.next().await {
             match event_result {
-                Ok(event) => debug!("Received event: {event:?}"),
+                Ok(event) => {
+                    callbacks::handle_event(
+                        event,
+                        Arc::clone(&all_marks_state_for_event_stream),
+                        weak_ui.clone(),
+                    )
+                    .await
+                    .map_err(|err| Error::FailedToHandleEvent(err.to_string()))?;
+                }
                 Err(err) => {
                     error!("failed to read event: {err:?}");
-                    break;
+                    Err(Error::FailedToReadEvent(err.to_string()))?;
                 }
             }
         }
+        Ok::<(), Error>(())
     });
-
     ui.run()
 }

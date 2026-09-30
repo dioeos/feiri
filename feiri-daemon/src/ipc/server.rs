@@ -179,25 +179,26 @@ impl IpcServer {
         todo!()
     }
 
+    //Returns an `Err(String)`, which contains a `Service` error
     async fn handle_command(
         &self,
         mut stream: UnixStream,
         operation: feiri_ipc::Command,
     ) -> Result<(), Error> {
-        let response = match operation {
+        let reply: Reply = match operation {
             Command::Action(action) => {
-                self.action_handler.handle_action_request(action).await?;
-                Response::Handled
+                match self.action_handler.handle_action_request(action).await {
+                    Ok(()) => Ok(Response::Handled),
+                    Err(err) => Err(err.to_string()),
+                }
             }
-            Command::Query(query) => {
-                let result = self.query_handler.handle_query_request(query).await?;
-                debug!(?result, "query answered");
-                Response::Query(result)
-            }
+            Command::Query(query) => match self.query_handler.handle_query_request(query).await {
+                Ok(result) => Ok(Response::Query(result)),
+                Err(err) => Err(err.to_string()),
+            },
         };
 
-        let mut bytes = serde_json::to_vec(&Ok::<_, String>(response))
-            .map_err(Error::FailedToConvertMsgToBytes)?;
+        let mut bytes = serde_json::to_vec(&reply).map_err(Error::FailedToConvertMsgToBytes)?;
 
         bytes.push(b'\n');
         stream

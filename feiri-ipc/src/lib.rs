@@ -30,7 +30,7 @@ pub enum Request {
 pub type Reply = Result<Response, String>;
 
 /// Successful response from Feiri to client
-#[derive(serde::Deserialize, serde::Serialize)]
+#[derive(serde::Deserialize, serde::Serialize, Debug)]
 pub enum Response {
     Handled,
     Query(QueryResponse)
