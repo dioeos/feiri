@@ -155,6 +155,18 @@ impl IpcServer {
             .await
             .map_err(Error::FailedToAckSuccessfulEventStream)?;
 
+        //build marks snaptshot
+        let marks = self.action_handler.build_marks().await;
+
+        let mut snapshot = serde_json::to_vec(&feiri_ipc::Event::MarksChanged { marks })
+            .map_err(Error::FailedToConvertMsgToBytes)?;
+
+        snapshot.push(b'\n');
+        stream
+            .write_all(&snapshot)
+            .await
+            .map_err(Error::FailedToSendSnapshot)?;
+
         loop {
             let recv_res = daemon_evt_rx.recv().await;
             let event: feiri_ipc::Event = match recv_res {

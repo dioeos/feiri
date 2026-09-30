@@ -60,7 +60,7 @@ impl ActionHandler {
         let _ = self.event_sender.send(event);
     }
 
-    async fn build_marks(&self) -> Vec<Mark> {
+    pub async fn build_marks(&self) -> Vec<Mark> {
         let slot_to_window_id: Vec<(usize, WindowId)> = self.mark_service.list_marks().await;
         let mut marks: Vec<Mark> = Vec::with_capacity(slot_to_window_id.len());
 

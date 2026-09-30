@@ -9,13 +9,13 @@ use crate::WindowManager;
 
 pub struct MarkService {
     mark_store: Arc<MarkStore>,
-    window_manager: Mutex<WindowManager>,
+    window_manager: WindowManager,
     last_focused_slot: Mutex<Option<usize>>,
 }
 
 #[allow(dead_code)]
 impl MarkService {
-    pub fn new(window_manager: Mutex<WindowManager>) -> Self {
+    pub fn new(window_manager: WindowManager) -> Self {
         Self {
             mark_store: Arc::new(MarkStore::default()),
             window_manager,
@@ -28,13 +28,7 @@ impl MarkService {
     }
 
     pub async fn mark_focused_window(&self, slot: u8) -> Result<(), Error> {
-        let Some(focused_window) = self
-            .window_manager
-            .lock()
-            .await
-            .get_focused_window()
-            .await?
-        else {
+        let Some(focused_window) = self.window_manager.get_focused_window().await? else {
             debug!("Cannot mark window. No current focused window");
             return Ok(());
         };
@@ -59,11 +53,7 @@ impl MarkService {
             return Ok(());
         };
 
-        self.window_manager
-            .lock()
-            .await
-            .focus_window(window_id)
-            .await?;
+        self.window_manager.focus_window(window_id).await?;
         self.set_last_focused_slot(usize::from(slot - 1)).await;
         Ok(())
     }
@@ -81,11 +71,7 @@ impl MarkService {
             return Ok(());
         };
 
-        self.window_manager
-            .lock()
-            .await
-            .focus_window(window_id_to_focus)
-            .await?;
+        self.window_manager.focus_window(window_id_to_focus).await?;
         self.set_last_focused_slot(index).await;
 
         Ok(())
@@ -104,11 +90,7 @@ impl MarkService {
             return Ok(());
         };
 
-        self.window_manager
-            .lock()
-            .await
-            .focus_window(window_id_to_focus)
-            .await?;
+        self.window_manager.focus_window(window_id_to_focus).await?;
         self.set_last_focused_slot(index).await;
 
         Ok(())
