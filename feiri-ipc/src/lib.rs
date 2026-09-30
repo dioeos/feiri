@@ -25,7 +25,7 @@ pub enum Request {
 /// Every request receives on reply.
 ///
 /// * If an error had occured during the daemon's handling of the request, the reply will be an `Reply::Err`.
-/// * If the request does not need any particular response, the reply will be an `Reply::Ok(Response::Handled`.
+/// * If the request does not need any particular response, the reply will be an `Reply::Ok(Response::Handled)`.
 /// * Otherwise, it will be `Reply::Ok(response)` with one of the other [`Response`] variants.
 pub type Reply = Result<Response, String>;
 

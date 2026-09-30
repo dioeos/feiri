@@ -176,7 +176,7 @@ impl IpcServer {
                 .map_err(Error::FailedToWriteEvent)?;
         }
 
-        todo!()
+        Ok(())
     }
 
     //Returns an `Err(String)`, which contains a `Service` error

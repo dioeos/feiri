@@ -1,7 +1,7 @@
-use anyhow::Context;
+use anyhow::{Context, bail};
 use clap::Parser;
 use feiri_cli::{Cli, Msg, Sub};
-use feiri_ipc::{Command, Request};
+use feiri_ipc::{Command, Request, Response};
 use tracing::debug;
 use tracing_subscriber::{EnvFilter, fmt};
 
@@ -26,17 +26,32 @@ async fn main() -> Result<(), anyhow::Error> {
 
         match msg {
             Msg::Action { action } => {
-                socket
+                let reply = socket
                     .send(Request::Operation(Command::Action(action.clone())))
                     .await
                     .context("Failed to send Feiri IPC action")?;
-                debug!(?action, "sent msg");
+
+                let response = match reply {
+                    Ok(response) => response,
+                    Err(err) => bail!("Errror handling request: {err:?}")
+                };
+
+                if !matches!(response, Response::Handled) {
+                    println!("Failed to perform action. Unexpected response: {response:?}");
+                }
             }
             Msg::Query { query } => {
-                socket
+                let reply = socket
                     .send(Request::Operation(Command::Query(query.clone())))
                     .await
                     .context("Failed to send Feiri IPC query")?;
+
+                let response = match reply {
+                    Ok(response) => response,
+                    Err(err) => bail!("Error handling request: {err:?}")
+                };
+
+                println!("{response:?}");
                 debug!(?query, "sent msg");
             }
         }
