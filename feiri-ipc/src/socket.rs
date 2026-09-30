@@ -70,13 +70,9 @@ impl Socket {
     ///
     /// This function should only be used after requesting [`EventStream`][Request::EventStream]
     pub async fn read_events(self) -> impl Stream<Item = Result<Event, Error>> {
-        let Self { stream } = self;
-        let (reader, mut writer) = stream.into_inner().into_split();
-
-        writer.shutdown().await.unwrap();
-
-        let reader = BufReader::new(reader);
-        let lines = LinesStream::new(reader.lines());
+        let Self { mut stream } = self;
+        stream.get_mut().shutdown().await.unwrap();
+        let lines = LinesStream::new(stream.lines());
 
         lines.map(|line| {
             //a line yields value of io::Result<Option<String>>
