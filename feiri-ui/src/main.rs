@@ -14,7 +14,7 @@ use tracing_subscriber::{EnvFilter, fmt};
 
 slint::include_modules!();
 
-fn main() -> Result<(), slint::PlatformError> {
+fn main() -> Result<(), Error> {
     dotenvy::dotenv().ok();
     let format = fmt::format().with_level(true).with_target(true).compact();
 
@@ -47,7 +47,7 @@ fn main() -> Result<(), slint::PlatformError> {
     ui.set_marks(marks_model.into());
 
     let weak_ui = ui.as_weak();
-
+    let weak_ui_for_event_stream = weak_ui.clone();
     tokio::spawn(async move {
         let mut socket = Socket::connect().await?;
         //socket can return errors defined in `socket::Error`
@@ -75,7 +75,7 @@ fn main() -> Result<(), slint::PlatformError> {
                     callbacks::handle_event(
                         event,
                         Arc::clone(&all_marks_state_for_event_stream),
-                        weak_ui.clone(),
+                        weak_ui_for_event_stream.clone(),
                     )
                     .await
                     .map_err(|err| Error::FailedToHandleEvent(err.to_string()))?;
@@ -88,5 +88,26 @@ fn main() -> Result<(), slint::PlatformError> {
         }
         Ok::<(), Error>(())
     });
-    ui.run()
+
+    ui.on_search_requested(move |search_input| {
+        let query = search_input.to_string().to_lowercase();
+        let all_marks_wrapper_for_search = Arc::clone(&all_marks_state);
+        let weak_ui_for_search = weak_ui.clone();
+        let search_result = slint::spawn_local(async_compat::Compat::new(async move {
+            if let Err(err) =
+                callbacks::handle_search(query, all_marks_wrapper_for_search, weak_ui_for_search)
+                    .await
+            {
+                error!("failed to filter marks: {err:?}");
+            }
+        }))
+        .map_err(Error::EventLoopError);
+
+        if let Err(err) = search_result {
+            error!("failed to spawn search: {err:?}");
+        }
+    });
+    ui.run()?;
+
+    Ok(())
 }
