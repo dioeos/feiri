@@ -76,7 +76,7 @@ async fn main() -> Result<(), anyhow::Error> {
     info!("ipc server running...");
 
     //@NOTE: At baseline state, the program has 2 baseline tasks + 1 task per active IPC handler
-    //       
+    //
     //       * Main Async Task - Runs the IPC accept loop and processes niri events
     //       * Blocking Task - Reads niri events and sends to channel
     //       [x] Per-command async task - Handles IPC command request

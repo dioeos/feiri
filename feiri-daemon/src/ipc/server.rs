@@ -158,8 +158,8 @@ impl IpcServer {
         //build marks snaptshot
         let marks = self.action_handler.build_marks().await;
 
-        let mut snapshot =
-            serde_json::to_vec(&feiri_ipc::Event::MarksChanged { marks  }).map_err(Error::FailedToConvertMsgToBytes)?;
+        let mut snapshot = serde_json::to_vec(&feiri_ipc::Event::MarksChanged { marks })
+            .map_err(Error::FailedToConvertMsgToBytes)?;
 
         snapshot.push(b'\n');
         stream
