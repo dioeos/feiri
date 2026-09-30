@@ -42,6 +42,9 @@ pub enum Error {
     FailedToConvertMsgToBytes(#[source] serde_json::Error),
 
     #[error("{self:?}")]
+    FailedToSendSnapshot(#[source] std::io::Error),
+
+    #[error("{self:?}")]
     FailedToWriteEvent(#[source] std::io::Error),
 
     #[error("{self:?}")]

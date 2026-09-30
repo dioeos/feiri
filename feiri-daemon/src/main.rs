@@ -22,7 +22,7 @@ use crate::{
 
 pub const FEIRI_IPC_SOCK: &str = "feiri-ipc.sock";
 
-#[tokio::main]
+#[tokio::main(worker_threads = 2)]
 async fn main() -> Result<(), anyhow::Error> {
     dotenvy::dotenv().ok();
     let format = fmt::format().with_level(true).with_target(true).compact();
