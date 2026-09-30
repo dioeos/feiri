@@ -16,6 +16,7 @@ tokio.workspace = true
 tokio-stream.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
+async-compat = "0.2.6"
 
 [build-dependencies]
 slint-build = "1.18.1"

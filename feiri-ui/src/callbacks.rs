@@ -8,9 +8,11 @@ use crate::{AppWindow, MarkRowItem};
 
 use super::error::Error;
 
+type MarksState = Arc<Mutex<Vec<MarkRowItem>>>;
+
 pub async fn handle_event(
     event: feiri_ipc::Event,
-    marks_state: Arc<Mutex<Vec<MarkRowItem>>>,
+    marks_state: MarksState,
     weak_ui: slint::Weak<AppWindow>,
 ) -> Result<(), Error> {
     match event {
@@ -43,5 +45,33 @@ pub async fn handle_event(
                 .unwrap();
         }
     }
+    Ok(())
+}
+
+pub async fn handle_search(
+    query: String,
+    marks_state: MarksState,
+    weak_ui: slint::Weak<AppWindow>,
+) -> Result<(), Error> {
+    let filtered_rows = {
+        let wrapper_guard = marks_state.lock().await;
+
+        wrapper_guard
+            .iter()
+            .filter(|row| row.title.to_lowercase().contains(&query))
+            .cloned()
+            .collect::<Vec<MarkRowItem>>()
+    };
+
+    let Some(ui) = weak_ui.upgrade() else {
+        return Err(Error::UIDropped);
+    };
+
+    let model = ui.get_marks();
+    let model = model
+        .as_any()
+        .downcast_ref::<VecModel<MarkRowItem>>()
+        .expect("marks backed by Vec<T>");
+    model.set_vec(filtered_rows);
     Ok(())
 }
