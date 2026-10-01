@@ -5,7 +5,7 @@ use error::Error;
 
 use std::{rc::Rc, sync::Arc};
 
-use feiri_ipc::{Action, Command, Reply, Request, Response, socket::Socket};
+use feiri_ipc::{Reply, Request, Response, socket::Socket};
 use slint::VecModel;
 use tokio::{runtime, sync::Mutex};
 use tokio_stream::StreamExt;
@@ -89,10 +89,11 @@ fn main() -> Result<(), Error> {
         Ok::<(), Error>(())
     });
 
+    let weak_ui_tmp = weak_ui.clone();
     ui.on_search_requested(move |search_input| {
         let query = search_input.to_string().to_lowercase();
         let all_marks_wrapper_for_search = Arc::clone(&all_marks_state);
-        let weak_ui_for_search = weak_ui.clone();
+        let weak_ui_for_search = weak_ui_tmp.clone();
         let search_result = slint::spawn_local(async_compat::Compat::new(async move {
             if let Err(err) =
                 callbacks::handle_search(query, all_marks_wrapper_for_search, weak_ui_for_search)
@@ -108,35 +109,29 @@ fn main() -> Result<(), Error> {
         }
     });
 
-    ui.on_return_requested(move |current_index| {
-        tokio::spawn(async move {
-            let mut socket = Socket::connect().await?;
-            let slot = match u8::try_from(current_index) {
-                Ok(val) => val,
-                Err(_) => return Err(Error::FailedToConvertIndexToSlot),
-            };
-            let action = Action::FocusMark { slot };
-
-            let reply = socket
-                .send(Request::Operation(Command::Action(action)))
-                .await?;
-
-            let response = match reply {
-                Ok(response) => response,
-                Err(message) => return Err(Error::FeiriErrorRequest(message.to_string())),
-            };
-
-            if !matches!(response, Response::Handled) {
-                return Err(Error::UnexpectedIpcResponse {
-                    expected: Response::Handled,
-                    received: response,
-                });
+    let weak_ui_for_focus = weak_ui.clone();
+    ui.on_focus_requested(move |current_index| {
+        let focus_result = slint::spawn_local(async_compat::Compat::new(async move {
+            if let Err(err) = callbacks::handle_focus(current_index).await {
+                error!("failed to focusn mark: {err:?}");
             }
-            Ok::<(), Error>(())
-        });
+        }))
+        .map_err(Error::EventLoopError);
+
+        if let Err(err) = focus_result {
+            error!("failed to spawn focus: {err:?}");
+        }
+
+        let Some(ui) = weak_ui_for_focus.upgrade() else {
+            error!("failed to find window in focus request");
+            return;
+        };
+
+        if let Err(err) = ui.hide() {
+            error!("failed to hide window in focus request: {err:?}");
+        }
     });
 
     ui.run()?;
-
     Ok(())
 }

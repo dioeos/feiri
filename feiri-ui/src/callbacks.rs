@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use feiri_ipc::Event;
+use feiri_ipc::{Action, Command, Event, Request, Response, socket::Socket};
 use slint::{Model, SharedString, VecModel};
 use tokio::sync::Mutex;
 
@@ -74,4 +74,31 @@ pub async fn handle_search(
         .expect("marks backed by Vec<T>");
     model.set_vec(filtered_rows);
     Ok(())
+}
+
+pub async fn handle_focus(current_index: i32) -> Result<(), Error> {
+    let mut socket = Socket::connect().await?;
+    let slot = match u8::try_from(current_index) {
+        Ok(val) => val,
+        Err(_) => return Err(Error::FailedToConvertIndexToSlot),
+    };
+
+    let action = Action::FocusMark { slot };
+
+    let reply = socket
+        .send(Request::Operation(Command::Action(action)))
+        .await?;
+
+    let response = match reply {
+        Ok(response) => response,
+        Err(msg) => return Err(Error::FeiriErrorRequest(msg.to_string())),
+    };
+
+    if !matches!(response, Response::Handled) {
+        return Err(Error::UnexpectedIpcResponse {
+            expected: Response::Handled,
+            received: response,
+        });
+    }
+    Ok::<(), Error>(())
 }
