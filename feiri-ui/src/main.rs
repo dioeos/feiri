@@ -110,25 +110,27 @@ fn main() -> Result<(), Error> {
     });
 
     let weak_ui_for_focus = weak_ui.clone();
-    ui.on_focus_requested(move |current_index| {
+    ui.on_focus_requested(move |slot| {
+        let weak_ui = weak_ui_for_focus.clone();
         let focus_result = slint::spawn_local(async_compat::Compat::new(async move {
-            if let Err(err) = callbacks::handle_focus(current_index).await {
-                error!("failed to focusn mark: {err:?}");
+            if let Err(err) = callbacks::handle_focus(slot).await {
+                error!("failed to focus mark: {err:?}");
+                return;
+            }
+
+            let Some(ui) = weak_ui.upgrade() else {
+                error!("failed to find window in focus request");
+                return;
+            };
+
+            if let Err(err) = ui.hide() {
+                error!("failed to hide window in focus request: {err:?}");
             }
         }))
         .map_err(Error::EventLoopError);
 
         if let Err(err) = focus_result {
             error!("failed to spawn focus: {err:?}");
-        }
-
-        let Some(ui) = weak_ui_for_focus.upgrade() else {
-            error!("failed to find window in focus request");
-            return;
-        };
-
-        if let Err(err) = ui.hide() {
-            error!("failed to hide window in focus request: {err:?}");
         }
     });
 

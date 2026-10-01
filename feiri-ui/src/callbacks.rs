@@ -76,12 +76,11 @@ pub async fn handle_search(
     Ok(())
 }
 
-pub async fn handle_focus(current_index: i32) -> Result<(), Error> {
+pub async fn handle_focus(slot: SharedString) -> Result<(), Error> {
+    let slot = slot
+        .parse::<u8>()
+        .map_err(|_| Error::FailedToConvertIndexToSlot)?;
     let mut socket = Socket::connect().await?;
-    let slot = match u8::try_from(current_index) {
-        Ok(val) => val,
-        Err(_) => return Err(Error::FailedToConvertIndexToSlot),
-    };
 
     let action = Action::FocusMark { slot };
 
