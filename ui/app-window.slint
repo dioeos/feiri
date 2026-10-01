@@ -9,7 +9,7 @@ export component AppWindow inherits Window {
     width: 500px;
     no-frame: true;
     callback search-requested <=> search.search-changed;
-    callback return-requested <=> results.return-pressed;
+    callback focus-requested <=> results.return-pressed;
 
     forward-focus: results;
 
