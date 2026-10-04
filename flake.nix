@@ -101,5 +101,53 @@
         }
       );
       homeManagerModules.default = import ./feiri-module.nix;
+
+      apps = forAllPlatforms (
+        pkgs:
+        let
+          runVm =
+            module:
+            let
+              vm = import ./nix/vm/create.nix {
+                inherit module nixpkgs;
+                system = pkgs.stdenv.hostPlatform.system;
+              };
+
+              program = pkgs.writeShellScript "run-feiri-vm" ''
+                ${pkgs.lib.getExe vm.config.system.build.vm} "$@"
+              '';
+            in
+            {
+              type = "app";
+              program = "${program}";
+              meta.description = "start a VM from ${toString module}";
+            };
+        in
+        {
+          aarch64-vm = runVm ./nix/vm/aarch64.nix;
+        }
+      );
+
+      checks = forAllPlatforms (
+        pkgs:
+        let
+          system = pkgs.stdenv.hostPlatform.system;
+          packages = self.packages.${system};
+
+          guestModule =
+            {
+              aarch64-linux = ./nix/vm/aarch64.nix;
+              x86_64-linux = ./nix/vm/x86_64.nix;
+            }
+            .${system};
+        in
+        {
+          target = import ./nix/tests/target.nix {
+            inherit pkgs guestModule;
+            feiriPackage = packages.daemon;
+            feiriUiPackage = packages.ui;
+          };
+        }
+      );
     };
 }
