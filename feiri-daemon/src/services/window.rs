@@ -13,7 +13,7 @@ impl WindowService {
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         Self {
-            window_store: WindowStore::new(),
+            window_store: WindowStore::default(),
         }
     }
     pub async fn upsert_window(&self, window: Window) {
