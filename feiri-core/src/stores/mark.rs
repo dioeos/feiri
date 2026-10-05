@@ -79,6 +79,12 @@ impl MarkStore {
         }
         None
     }
+
+    pub async fn remove_mark(&self, slot: u8) -> Option<WindowId> {
+        let mut rw_guard = self.marks.write().await;
+
+        rw_guard.get_mut((slot - 1) as usize)?.take()
+    }
 }
 
 #[cfg(test)]
@@ -158,5 +164,22 @@ mod tests {
         store.insert_mark(3, WindowId(3)).await;
 
         assert_eq!(store.next_available_slot().await, Some(2));
+    }
+
+    #[tokio::test]
+    async fn remove_returns_none_when_slot_empty() {
+        let store = MarkStore::default();
+
+        let res = store.remove_mark(1).await;
+        assert_eq!(None, res)
+    }
+
+    #[tokio::test]
+    async fn remove_returns_window_id() {
+        let store = MarkStore::default();
+
+        store.insert_mark(1, WindowId(1)).await;
+        let res = store.remove_mark(1).await;
+        assert_eq!(res, Some(WindowId(1)));
     }
 }

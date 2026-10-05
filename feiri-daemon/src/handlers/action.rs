@@ -51,6 +51,11 @@ impl ActionHandler {
             Action::PrevMark => {
                 self.mark_service.focus_prev_marked_window().await?;
             }
+            Action::DeleteMark { slot } => {
+                self.mark_service.delete_mark(slot).await;
+                let marks = self.build_marks().await;
+                self.emit_event(feiri_ipc::Event::MarksChanged { marks });
+            }
         }
         debug!(action = ?action, "successfully handled");
         Ok(())
