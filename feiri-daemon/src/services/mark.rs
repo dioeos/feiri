@@ -27,7 +27,7 @@ impl MarkService {
         self.mark_store.all_marks().await
     }
 
-    pub async fn delete_mark(&self, slot: u8)  {
+    pub async fn delete_mark(&self, slot: u8) {
         match self.mark_store.remove_mark(slot).await {
             Some(_) => {}
             None => {

@@ -64,7 +64,7 @@ pub enum Action {
         /// Slot of the mark to be removed.
         ///
         /// For example: `9`.
-        slot: u8
+        slot: u8,
     },
 
     // Marks the currently focused window in the next available slot.
