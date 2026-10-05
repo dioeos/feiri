@@ -59,6 +59,14 @@ pub enum Action {
         slot: u8,
     },
 
+    /// Deletes the mark currently stored in the given slot.
+    DeleteMark {
+        /// Slot of the mark to be removed.
+        ///
+        /// For example: `9`.
+        slot: u8,
+    },
+
     // Marks the currently focused window in the next available slot.
     MarkWindowNext,
 

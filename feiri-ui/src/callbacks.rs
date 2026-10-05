@@ -1,6 +1,11 @@
 use std::sync::Arc;
 
-use feiri_ipc::{Action, Command, Event, Request, Response, socket::Socket};
+use feiri_ipc::{
+    Action,
+    Command::{self},
+    Event, Reply, Request, Response,
+    socket::Socket,
+};
 use slint::{Model, SharedString, VecModel};
 use tokio::sync::Mutex;
 
@@ -45,6 +50,52 @@ pub async fn handle_event(
                 .unwrap();
         }
     }
+    Ok(())
+}
+
+pub async fn handle_delete(
+    slot: SharedString,
+    weak_ui: slint::Weak<AppWindow>,
+) -> Result<(), Error> {
+    let mut socket = Socket::connect().await?;
+    let slot_u8 = slot.clone().parse::<u8>().unwrap();
+    let action = Action::DeleteMark { slot: slot_u8 };
+
+    let reply: Reply = socket
+        .send(Request::Operation(Command::Action(action)))
+        .await?;
+
+    let response = match reply {
+        Ok(response) => response,
+        Err(message) => return Err(Error::FeiriErrorRequest(message.to_string())),
+    };
+
+    if !matches!(response, Response::Handled) {
+        return Err(Error::UnexpectedIpcResponse {
+            expected: Response::Handled,
+            received: response,
+        });
+    }
+
+    weak_ui
+        .upgrade_in_event_loop(move |ui| {
+            let model = ui.get_marks();
+
+            for i in 0..model.row_count() {
+                if let Some(mark) = model.row_data(i)
+                    && mark.slot == slot
+                {
+                    let model = model
+                        .as_any()
+                        .downcast_ref::<VecModel<MarkRowItem>>()
+                        .expect("marks backed by Vec<T>");
+
+                    model.remove(i);
+                }
+            }
+        })
+        .unwrap();
+
     Ok(())
 }
 

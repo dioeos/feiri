@@ -8,6 +8,7 @@ export component SearchResultMenu inherits FocusScope {
   property <int> selected-index: 0;
 
   callback insert-pressed();
+  callback delete-pressed(string);
   callback return-pressed(string);
 
   KeyBinding {
@@ -58,6 +59,15 @@ export component SearchResultMenu inherits FocusScope {
       if (root.marks.length > 0) {
         root.selected-index = 0;
         root.scroll-to-selection();
+      }
+    }
+  }
+
+  KeyBinding {
+    keys: @keys(Control + D);
+    activated => {
+      if (root.selected-index >= 0 && root.selected-index < root.marks.length) {
+        root.delete-pressed(root.marks[root.selected-index].slot);
       }
     }
   }

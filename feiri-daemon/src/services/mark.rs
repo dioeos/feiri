@@ -27,6 +27,15 @@ impl MarkService {
         self.mark_store.all_marks().await
     }
 
+    pub async fn delete_mark(&self, slot: u8) {
+        match self.mark_store.remove_mark(slot).await {
+            Some(_) => {}
+            None => {
+                debug!("Cannot delete mark. No mark in given slot");
+            }
+        }
+    }
+
     pub async fn mark_focused_window(&self, slot: u8) -> Result<(), Error> {
         let Some(focused_window) = self.window_manager.get_focused_window().await? else {
             debug!("Cannot mark window. No current focused window");
