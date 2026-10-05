@@ -7,6 +7,10 @@ pkgs.testers.runNixOSTest {
   node.pkgsReadOnly = false;
   qemu.package = pkgs.qemu;
 
+  #allow CI runners without /dev/kvm to use software emulation
+  requiredFeatures.kvm = false;
+  qemu.forceAccel = false;
+
   nodes.machine = {
     imports = [
       ../vm/common.nix
