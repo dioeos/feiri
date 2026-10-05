@@ -1,9 +1,18 @@
 mod callbacks;
+mod config;
 mod error;
 
+use anyhow::{Context, bail};
 use error::Error;
 
-use std::{rc::Rc, sync::Arc};
+use std::{
+    env::var_os,
+    fs::{self},
+    io::ErrorKind,
+    path::PathBuf,
+    rc::Rc,
+    sync::Arc,
+};
 
 use feiri_ipc::{Reply, Request, Response, socket::Socket};
 use slint::VecModel;
@@ -12,9 +21,13 @@ use tokio_stream::StreamExt;
 use tracing::{error, info};
 use tracing_subscriber::{EnvFilter, fmt};
 
+use crate::config::Config;
+
 slint::include_modules!();
 
-fn main() -> Result<(), Error> {
+pub const FEIRI_CONFIG_FILE_PATH: &str = "feiri/config.toml";
+
+fn main() -> Result<(), anyhow::Error> {
     dotenvy::dotenv().ok();
     let format = fmt::format().with_level(true).with_target(true).compact();
 
@@ -24,6 +37,34 @@ fn main() -> Result<(), Error> {
         )
         .event_format(format)
         .init();
+
+    let xdg_config_os_string =
+        var_os("XDG_CONFIG_HOME").context("XDG_CONFIG_HOME environment varialbe is not set")?;
+
+    let mut config_path = PathBuf::from(xdg_config_os_string);
+    config_path.push(FEIRI_CONFIG_FILE_PATH);
+
+    let config_contents = match fs::read_to_string(&config_path) {
+        Ok(contents) => contents,
+        Err(err) if err.kind() == ErrorKind::NotFound => {
+            if let Some(parent) = config_path.parent() {
+                fs::create_dir_all(parent)?;
+            }
+
+            let default_config = Config::default();
+            let contents = toml::to_string(&default_config)?;
+
+            fs::write(&config_path, &contents)?;
+
+            contents
+        }
+        Err(err) => {
+            bail!("Failed to read Feiri config: {err}");
+        }
+    };
+
+    let config: Config = toml::from_str(&config_contents)
+        .with_context(|| format!("Failed to read Feiri config at {}", config_path.display()))?;
 
     let rt = runtime::Builder::new_multi_thread()
         .worker_threads(1)
@@ -35,6 +76,9 @@ fn main() -> Result<(), Error> {
     info!("entered tokio runtime");
 
     let ui = AppWindow::new()?;
+
+    ui.set_app_font_family(config.font.family.into());
+    ui.set_app_font_size(config.font.size as f32);
 
     //@NOTE: Arc<Mutex<T>> is preferred over `Rc` due to `marks_state` being captured by a closure
     //       passed to `slint_invoke_from_event_loop` from a `tokio::spawn` task. `Rc` does not have

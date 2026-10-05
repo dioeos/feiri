@@ -5,30 +5,43 @@ import { MarkRowItem } from "./structs/mark_row_item.slint";
 
 export component AppWindow inherits Window {
     in property <[MarkRowItem]> marks;
-
-    width: 500px;
-    no-frame: true;
+    in property <string> app-font-family;
+    in property <length> app-font-size;
     callback search-requested <=> search.search-changed;
     callback focus-requested <=> results.return-pressed;
     callback delete-requested <=> results.delete-pressed;
 
     forward-focus: results;
 
-    window-scope := FocusScope {
-      VerticalBox {
-        padding: 5px;
-          search := SearchInput {
-            esc-pressed => {
-              results.focus();
-            }
-          }
+    default-font-family: app-font-family;
+    default-font-size: app-font-size;
 
-        results := SearchResultMenu {
-          insert-pressed => {
-            search.focus();
+    no-frame: true;
+    background: transparent;
+    width: 500px;
+
+    Rectangle {
+      width: 100%;
+      height: 100%;
+      // background: #ff0000;
+      clip: true;
+      // border-radius: 16px;
+      window-scope := FocusScope {
+        VerticalBox {
+          padding: 5px;
+            search := SearchInput {
+              esc-pressed => {
+                results.focus();
+              }
+            }
+
+          results := SearchResultMenu {
+            insert-pressed => {
+              search.focus();
+            }
+            height: min(root.marks.length * 36px, 300px);
+            marks: root.marks;
           }
-          height: min(root.marks.length * 36px, 300px);
-          marks: root.marks;
         }
       }
     }
