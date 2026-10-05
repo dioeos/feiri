@@ -59,6 +59,9 @@ pub enum Action {
         slot: u8,
     },
 
+    // Marks the currently focused window in the next available slot.
+    MarkWindowNext,
+
     /// Marks a specific window with the given slot.
     MarkRequestedWindow {
         /// Slot to assign to the window.

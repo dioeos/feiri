@@ -69,6 +69,16 @@ impl MarkStore {
 
         (None, None)
     }
+
+    pub async fn next_available_slot(&self) -> Option<u8> {
+        let rw_guard = self.marks.read().await;
+        for (i, slot) in rw_guard.iter().enumerate() {
+            if slot.is_none() {
+                return Some((i + 1) as u8);
+            }
+        }
+        None
+    }
 }
 
 #[cfg(test)]
@@ -122,5 +132,31 @@ mod tests {
 
         let result = store.prev_mark(0).await;
         assert_eq!(result, (Some(8), Some(id)));
+    }
+
+    #[tokio::test]
+    async fn returns_first_when_all_empty() {
+        let store = MarkStore::default();
+        assert_eq!(store.next_available_slot().await, Some(1));
+    }
+
+    #[tokio::test]
+    async fn returns_first_available() {
+        let store = MarkStore::default();
+
+        store.insert_mark(1, WindowId(1)).await;
+        store.insert_mark(2, WindowId(2)).await;
+
+        assert_eq!(store.next_available_slot().await, Some(3));
+    }
+
+    #[tokio::test]
+    async fn returns_first_gap() {
+        let store = MarkStore::default();
+
+        store.insert_mark(1, WindowId(1)).await;
+        store.insert_mark(3, WindowId(3)).await;
+
+        assert_eq!(store.next_available_slot().await, Some(2));
     }
 }
