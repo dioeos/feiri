@@ -1,5 +1,7 @@
 import { Icon } from "../components/icon.slint";
 import { MarkRowItem } from "../structs/mark_row_item.slint";
+import { ColorsTheme } from "../styling/ColorsTheme.slint";
+import { FontTheme } from "../styling/FontTheme.slint";
 
 export component MarkResultRow inherits Rectangle {
     in property <MarkRowItem> mark;
@@ -9,8 +11,8 @@ export component MarkResultRow inherits Rectangle {
     height: 56px;
     border-radius: 9px;
     border-width: root.is-current ? 1px : 0px;
-    border-color: #89b6d2;
-    background: root.is-current || touch.pressed ? #a5cfe6e8 : touch.has-hover ? #ffffff65 : transparent;
+    border-color: ColorsTheme.selected;
+    background: root.is-current || touch.pressed ? ColorsTheme.selected : touch.has-hover ? ColorsTheme.hover : transparent;
 
     HorizontalLayout {
         padding-left: 10px;
@@ -33,8 +35,8 @@ export component MarkResultRow inherits Rectangle {
             Text {
                 text: root.mark.title;
                 font-size: 14px;
-                font-weight: 400;
-                color: #202720;
+                font-weight: FontTheme.strong-weight;
+                color: ColorsTheme.text-primary;
                 overflow: elide;
                 wrap: no-wrap;
             }
@@ -43,8 +45,8 @@ export component MarkResultRow inherits Rectangle {
             width: 32px;
             height: 20px;
             y: (parent.height - self.height) / 2;
-            background: #89bff0;
-            border-color: #7eafe0;
+            background: ColorsTheme.secondary-accent;
+            border-color: ColorsTheme.accent;
             border-width: 1px;
             border-radius: 6px;
             Text {

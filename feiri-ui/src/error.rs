@@ -29,4 +29,8 @@ pub enum Error {
 
     #[error("{self:?}")]
     FailedToConvertIndexToSlot,
+
+    //config specific
+    #[error("{self:?}")]
+    InvalidConfig(String)
 }

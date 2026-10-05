@@ -1,19 +1,26 @@
+import "fonts/Inter-Regular.ttf";
+import "fonts/Inter-Bold.ttf";
+
 import { SearchInput } from "widgets/search_input.slint";
 import { SearchResultMenu } from "widgets/search_result_menu.slint";
 import { TopBar } from "widgets/top_bar.slint";
+
 import { MarkRowItem } from "./structs/mark_row_item.slint";
+
+import { FontTheme } from "./styling/FontTheme.slint";
+import { ColorsTheme } from "./styling/ColorsTheme.slint";
+
+export { FontTheme, ColorsTheme }
 
 export component AppWindow inherits Window {
     in property <[MarkRowItem]> marks;
-    in property <string> app-font-family;
-    in property <length> app-font-size;
-    callback search-requested <=> search.search-changed;
     callback focus-requested(string);
     callback delete-requested <=> results.delete-pressed;
+    callback search-requested <=> search.search-changed;
 
     forward-focus: results;
-    default-font-family: app-font-family;
-    default-font-size: app-font-size;
+    default-font-family: FontTheme.font-family;
+    default-font-size: FontTheme.font-medium;
     no-frame: true;
     background: transparent;
     width: 500px;
@@ -24,16 +31,16 @@ export component AppWindow inherits Window {
 
         Rectangle {
             border-radius: 14px;
-            background: #f5f5eb;
+            background: ColorsTheme.background;
             border-width: 1px;
-            border-color: #ffffffa0;
+            border-color: ColorsTheme.border;
             VerticalLayout {
                 padding: 6px;
                 spacing: 4px;
                 topbar := TopBar {
                   marks: root.marks;
                 }
-                Rectangle { height: 1px; background: #c8ccc180; }
+                Rectangle { height: 1px; background: ColorsTheme.surface; }
                 search := SearchInput {
                     return-pressed(slot) => { root.focus-requested(slot); }
                     esc-pressed => { results.focus(); }

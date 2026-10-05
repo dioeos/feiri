@@ -15,7 +15,7 @@ use std::{
 };
 
 use feiri_ipc::{Reply, Request, Response, socket::Socket};
-use slint::VecModel;
+use slint::{Color, VecModel};
 use tokio::{runtime, sync::Mutex};
 use tokio_stream::StreamExt;
 use tracing::{error, info};
@@ -77,8 +77,32 @@ fn main() -> Result<(), anyhow::Error> {
 
     let ui = AppWindow::new()?;
 
-    ui.set_app_font_family(config.font.family.into());
-    ui.set_app_font_size(config.font.size as f32);
+    ui.global::<FontTheme>()
+        .set_font_small(config.font.small_length as f32);
+    ui.global::<FontTheme>()
+        .set_strong_weight(config.font.strong_weight as i32);
+    ui.global::<FontTheme>()
+        .set_font_medium(config.font.medium_length as f32);
+    ui.global::<FontTheme>()
+        .set_font_family(config.font.family.into());
+
+    let color_bg: Color = config::parse_color(&config.colors.background)?;
+    let color_surface: Color = config::parse_color(&config.colors.surface)?;
+    let color_bg_border: Color = config::parse_color(&config.colors.border)?;
+    let color_accent: Color = config::parse_color(&config.colors.accent)?;
+    let color_secondary_accent: Color = config::parse_color(&config.colors.secondary_accent)?;
+    let color_selected: Color = config::parse_color(&config.colors.selected)?;
+    let color_hover: Color = config::parse_color(&config.colors.hover)?;
+    let color_txt_primary: Color = config::parse_color(&config.colors.text_primary)?;
+
+    ui.global::<ColorsTheme>().set_background(color_bg);
+    ui.global::<ColorsTheme>().set_surface(color_surface);
+    ui.global::<ColorsTheme>().set_border(color_bg_border);
+    ui.global::<ColorsTheme>().set_accent(color_accent);
+    ui.global::<ColorsTheme>().set_secondary_accent(color_secondary_accent);
+    ui.global::<ColorsTheme>().set_selected(color_selected);
+    ui.global::<ColorsTheme>().set_hover(color_hover);
+    ui.global::<ColorsTheme>().set_text_primary(color_txt_primary);
 
     //@NOTE: Arc<Mutex<T>> is preferred over `Rc` due to `marks_state` being captured by a closure
     //       passed to `slint_invoke_from_event_loop` from a `tokio::spawn` task. `Rc` does not have
