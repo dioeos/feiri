@@ -1,0 +1,32 @@
+import { MarkRowItem } from "../structs/mark_row_item.slint";
+
+export component TopBar {
+    in property <[MarkRowItem]> marks;
+    height: 22px;
+
+    HorizontalLayout {
+        padding-left: 12px;
+        padding-right: 12px;
+        spacing: 8px;
+
+        Text {
+            text: root.marks.length + " results";
+            color: #4a5754;
+            font-size: 11px;
+            font-weight: 600;
+            horizontal-stretch: 0;
+            vertical-alignment: center;
+        }
+
+        Rectangle { horizontal-stretch: 1; }
+
+        Text {
+            text: "j / k  navigate    ↵  focus";
+            color: #81897e;
+            font-size: 10px;
+            horizontal-stretch: 0;
+            vertical-alignment: center;
+        }
+
+    }
+}

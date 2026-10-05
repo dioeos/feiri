@@ -5,7 +5,18 @@ import { ScrollView } from "std-widgets.slint";
 
 export component SearchResultMenu inherits FocusScope {
   in property <[MarkRowItem]> marks;
-  property <int> selected-index: 0;
+  in-out property <int> selected-index: 0;
+
+  changed marks => {
+    root.selected-index = max(0, min(root.selected-index, root.marks.length - 1));
+    root.scroll-to-selection();
+  }
+
+  public function activate-selection() {
+    if (root.selected-index >= 0 && root.selected-index < root.marks.length) {
+      root.return-pressed(root.marks[root.selected-index].slot);
+    }
+  }
 
   callback insert-pressed();
   callback delete-pressed(string);
@@ -77,6 +88,10 @@ export component SearchResultMenu inherits FocusScope {
       for mark[index] in root.marks : MarkResultRow {
         mark: mark;
         is-current: index == root.selected-index;
+        activated => {
+          root.selected-index = index;
+          root.activate-selection();
+        }
       }
     }
   }
@@ -84,10 +99,10 @@ export component SearchResultMenu inherits FocusScope {
   function scroll-to-selection() {
     if (root.marks.length == 0) { return ;}
 
-    if (scroll.content-y + root.selected-index * 36px < 0px) {
-      scroll.content-y = -root.selected-index * 36px;
-    } else if (scroll.content-y + (root.selected-index + 1) * 36px > scroll.visible-height) {
-      scroll.content-y = scroll.visible-height - (root.selected-index + 1) * 36px;
+    if (scroll.content-y + root.selected-index * 56px < 0px) {
+      scroll.content-y = -root.selected-index * 56px;
+    } else if (scroll.content-y + (root.selected-index + 1) * 56px > scroll.visible-height) {
+      scroll.content-y = scroll.visible-height - (root.selected-index + 1) * 56px;
     }
   }
 }

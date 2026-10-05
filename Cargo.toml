@@ -22,7 +22,7 @@ slint = {
   features = [
     "std",
     "backend-winit-wayland",
-    "renderer-software",
+    "renderer-femtovg",
     "compat-1-18"
   ],
 }

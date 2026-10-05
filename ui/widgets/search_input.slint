@@ -1,25 +1,57 @@
-
-import { LineEdit } from "std-widgets.slint";
+import { MarkRowItem } from "../structs/mark_row_item.slint";
 
 export component SearchInput inherits FocusScope {
-  forward-focus: text_input;
-  in-out property <string> text <=> text-input.text;
+    forward-focus: text-input;
+    in-out property <string> text <=> text-input.text;
+    in property <[MarkRowItem]> marks;
 
-  callback search-changed(string);
-  callback esc-pressed();
+    callback search-changed(string);
+    callback esc-pressed();
+    callback return-pressed(string);
 
-  KeyBinding {
-    keys: @keys(Escape);
-    activated => { root.esc-pressed(); }
-  }
-
-  text_input := LineEdit {
-    width: parent.width;
-    height: 40px;
-    placeholder-text: "Search...";
-
-    edited(value) => {
-      root.search-changed(value)
+    height: 38px;
+    KeyBinding {
+        keys: @keys(Escape);
+        activated => { root.esc-pressed(); }
     }
-  }
+    HorizontalLayout {
+        padding-left: 16px;
+        padding-right: 16px;
+        spacing: 9px;
+        Rectangle {
+            horizontal-stretch: 1;
+            Text {
+                width: parent.width;
+                height: parent.height;
+                visible: text-input.text == "";
+                text: "Search marks…";
+                color: #7a817b;
+                vertical-alignment: center;
+                horizontal-alignment: left;
+                font-size: 13px;
+            }
+            text-input := TextInput {
+                width: parent.width;
+                height: parent.height;
+                horizontal-alignment: left;
+                single-line: true;
+                color: #202922;
+                font-size: 13px;
+                vertical-alignment: center;
+                edited => { root.search-changed(self.text); }
+                accepted => {
+                  if (root.marks.length > 0) {
+                    root.return-pressed(root.marks[0].slot);
+                  }
+                }
+            }
+        }
+        Text {
+            text: "esc";
+            horizontal-stretch: 0;
+            color: #8a9089;
+            font-size: 11px;
+            vertical-alignment: center;
+        }
+    }
 }

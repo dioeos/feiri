@@ -3,4 +3,4 @@ help:
 
 watch-ui:
   cargo watch -q -c -w "ui" \
-    -x "run -p niqol-ui"
+    -x "run -p feiri-ui"

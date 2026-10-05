@@ -1,6 +1,6 @@
-import { VerticalBox } from "std-widgets.slint";
 import { SearchInput } from "widgets/search_input.slint";
 import { SearchResultMenu } from "widgets/search_result_menu.slint";
+import { TopBar } from "widgets/top_bar.slint";
 import { MarkRowItem } from "./structs/mark_row_item.slint";
 
 export component AppWindow inherits Window {
@@ -8,41 +8,45 @@ export component AppWindow inherits Window {
     in property <string> app-font-family;
     in property <length> app-font-size;
     callback search-requested <=> search.search-changed;
-    callback focus-requested <=> results.return-pressed;
+    callback focus-requested(string);
     callback delete-requested <=> results.delete-pressed;
 
     forward-focus: results;
-
     default-font-family: app-font-family;
     default-font-size: app-font-size;
-
     no-frame: true;
     background: transparent;
     width: 500px;
+    height: 114px + min(max(root.marks.length, 1) * 56px, 448px);
 
-    Rectangle {
-      width: 100%;
-      height: 100%;
-      // background: #ff0000;
-      clip: true;
-      // border-radius: 16px;
-      window-scope := FocusScope {
-        VerticalBox {
-          padding: 5px;
-            search := SearchInput {
-              esc-pressed => {
-                results.focus();
-              }
-            }
+    VerticalLayout {
+        padding: 12px;
 
-          results := SearchResultMenu {
-            insert-pressed => {
-              search.focus();
+        Rectangle {
+            border-radius: 14px;
+            background: #f5f5eb;
+            border-width: 1px;
+            border-color: #ffffffa0;
+            VerticalLayout {
+                padding: 6px;
+                spacing: 4px;
+                topbar := TopBar {
+                  marks: root.marks;
+                }
+                Rectangle { height: 1px; background: #c8ccc180; }
+                search := SearchInput {
+                    return-pressed(slot) => { root.focus-requested(slot); }
+                    esc-pressed => { results.focus(); }
+                    search-changed(value) => { results.selected-index = 0; }
+                    marks: root.marks;
+                }
+                results := SearchResultMenu {
+                    return-pressed(slot) => { root.focus-requested(slot); }
+                    insert-pressed => { search.focus(); }
+                    marks: root.marks;
+                    visible: root.marks.length > 0;
+                }
             }
-            height: min(root.marks.length * 36px, 300px);
-            marks: root.marks;
-          }
         }
-      }
     }
 }
