@@ -134,6 +134,16 @@ fn main() -> Result<(), Error> {
         }
     });
 
+    let weak_ui_for_delete = weak_ui.clone();
+    ui.on_delete_requested(move |slot| {
+        let weak_ui = weak_ui_for_delete.clone();
+        tokio::spawn(async move {
+            callbacks::handle_delete(slot, weak_ui).await?;
+
+            Ok::<(), Error>(())
+        });
+    });
+
     ui.run()?;
     Ok(())
 }
