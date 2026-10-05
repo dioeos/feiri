@@ -69,6 +69,16 @@ impl MarkStore {
 
         (None, None)
     }
+
+    pub async fn next_available_slot(&self) -> Option<u8> {
+        let rw_guard = self.marks.read().await;
+        for (i, slot) in rw_guard.iter().enumerate() {
+            if slot.is_none() {
+                return Some((i + 1) as u8);
+            }
+        }
+        None
+    }
 }
 
 #[cfg(test)]

@@ -2,4 +2,7 @@
 pub enum Error {
     #[error("{self:?}")]
     Niri(#[from] crate::niri::error::CompositorError),
+
+    #[error("{self:?}")]
+    NoAvailableSlot,
 }

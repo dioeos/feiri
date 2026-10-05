@@ -32,6 +32,11 @@ impl ActionHandler {
                 let marks = self.build_marks().await;
                 self.emit_event(feiri_ipc::Event::MarksChanged { marks });
             }
+            Action::MarkWindowNext => {
+                self.mark_service.mark_window_next().await?;
+                let marks = self.build_marks().await;
+                self.emit_event(feiri_ipc::Event::MarksChanged { marks });
+            }
             Action::MarkRequestedWindow { slot, id } => {
                 self.mark_service.mark_window(slot, WindowId(id)).await?;
                 let marks = self.build_marks().await;

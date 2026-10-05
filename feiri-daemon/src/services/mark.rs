@@ -41,6 +41,24 @@ impl MarkService {
         Ok(())
     }
 
+    pub async fn mark_window_next(&self) -> Result<(), Error> {
+        let Some(focused_window) = self.window_manager.get_focused_window().await? else {
+            debug!("Cannot mark window. No current focused window");
+            return Ok(());
+        };
+
+        let window_id = focused_window.id;
+        let slot = match self.mark_store.next_available_slot().await {
+            Some(val) => val,
+            None => return Err(Error::NoAvailableSlot),
+        };
+
+        self.mark_store.insert_mark(slot, focused_window.id).await;
+        self.set_last_focused_slot(usize::from(slot - 1)).await;
+        debug!(window_id = window_id.0, mark = slot, "mark focused window");
+        Ok(())
+    }
+
     pub async fn mark_window(&self, slot: u8, window_id: WindowId) -> Result<(), Error> {
         self.mark_store.insert_mark(slot, window_id).await;
         debug!(window_id = window_id.0, mark = slot, "mark window");
