@@ -22,9 +22,9 @@ export component MarkResultRow inherits Rectangle {
             width: 30px;
             horizontal-stretch: 0;
             Icon {
-                icon-src: @image-url("../assets/window.svg");
-                width-length: 30px;
-                height-length: 30px;
+                icon-src: root.mark.icon;
+                width-length: 20px;
+                height-length: 20px;
                 y: (parent.height - self.height) / 2;
             }
         }

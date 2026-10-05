@@ -1,6 +1,7 @@
 mod callbacks;
 mod config;
 mod error;
+mod data;
 
 use anyhow::{Context, bail};
 use error::Error;
@@ -21,7 +22,7 @@ use tokio_stream::StreamExt;
 use tracing::{error, info};
 use tracing_subscriber::{EnvFilter, fmt};
 
-use crate::config::Config;
+use crate::{config::Config, data::MarkData};
 
 slint::include_modules!();
 
@@ -108,7 +109,7 @@ fn main() -> Result<(), anyhow::Error> {
     //       passed to `slint_invoke_from_event_loop` from a `tokio::spawn` task. `Rc` does not have
     //       `Send`, making it incorrect choice to wrap the state. The `all_marks_state` role is to
     //       share state between the tokio background worker thread and the main Slint event thread.
-    let all_marks_state = Arc::new(Mutex::new(Vec::<MarkRowItem>::new()));
+    let all_marks_state = Arc::new(Mutex::new(Vec::<MarkData>::new()));
     let all_marks_state_for_event_stream = Arc::clone(&all_marks_state);
 
     let marks_model = Rc::new(VecModel::<MarkRowItem>::default());
