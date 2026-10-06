@@ -32,5 +32,5 @@ pub enum Error {
 
     //config specific
     #[error("{self:?}")]
-    InvalidConfig(String)
+    InvalidConfig(String),
 }

@@ -1,7 +1,7 @@
 mod callbacks;
 mod config;
-mod error;
 mod data;
+mod error;
 
 use anyhow::{Context, bail};
 use error::Error;
@@ -100,10 +100,12 @@ fn main() -> Result<(), anyhow::Error> {
     ui.global::<ColorsTheme>().set_surface(color_surface);
     ui.global::<ColorsTheme>().set_border(color_bg_border);
     ui.global::<ColorsTheme>().set_accent(color_accent);
-    ui.global::<ColorsTheme>().set_secondary_accent(color_secondary_accent);
+    ui.global::<ColorsTheme>()
+        .set_secondary_accent(color_secondary_accent);
     ui.global::<ColorsTheme>().set_selected(color_selected);
     ui.global::<ColorsTheme>().set_hover(color_hover);
-    ui.global::<ColorsTheme>().set_text_primary(color_txt_primary);
+    ui.global::<ColorsTheme>()
+        .set_text_primary(color_txt_primary);
 
     //@NOTE: Arc<Mutex<T>> is preferred over `Rc` due to `marks_state` being captured by a closure
     //       passed to `slint_invoke_from_event_loop` from a `tokio::spawn` task. `Rc` does not have
