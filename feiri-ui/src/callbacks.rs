@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use feiri_ipc::{
     Action,
     Command::{self},
@@ -7,13 +5,33 @@ use feiri_ipc::{
     socket::Socket,
 };
 use slint::{Model, SharedString, VecModel};
-use tokio::sync::Mutex;
 
-use crate::{AppWindow, MarkRowItem};
+use crate::{
+    AppWindow, MarkRowItem,
+    data::{MarkData, MarksState},
+    icons::{self, entry},
+    use_config, use_desktop_index,
+};
 
 use super::error::Error;
 
-type MarksState = Arc<Mutex<Vec<MarkRowItem>>>;
+//@NOTE: Call only on the Slint UI thread: Image is not Send.
+fn to_ui_row(row: MarkData) -> MarkRowItem {
+    let index = use_desktop_index();
+    let config = use_config();
+    let app_id = row.app_id;
+
+    let icon_path = entry::find_entry_for_app_id(index, &app_id)
+        .and_then(|entry| icons::resolve_icon(entry, &config.icons.icon_theme));
+
+    MarkRowItem {
+        slot: row.slot.into(),
+        title: row.title.into(),
+        icon: icon_path
+            .and_then(|path| slint::Image::load_from_path(&path).ok())
+            .unwrap_or_default(),
+    }
+}
 
 pub async fn handle_event(
     event: feiri_ipc::Event,
@@ -22,32 +40,35 @@ pub async fn handle_event(
 ) -> Result<(), Error> {
     match event {
         Event::MarksChanged { marks } => {
-            let rows: Vec<MarkRowItem> = marks
+            let rows: Vec<MarkData> = marks
                 .into_iter()
-                .map(|mark| MarkRowItem {
-                    slot: SharedString::from(mark.slot.to_string()),
-                    title: SharedString::from(
-                        mark.window
+                .map(|mark| {
+                    let app_id = mark.window.app_id;
+                    MarkData {
+                        slot: mark.slot.to_string(),
+                        title: mark
+                            .window
                             .title
-                            .or(mark.window.app_id)
+                            .or_else(|| app_id.clone())
                             .unwrap_or_else(|| "Untitled".into()),
-                    ),
+                        app_id,
+                    }
                 })
                 .collect();
 
             *marks_state.lock().await = rows.clone();
 
-            weak_ui
-                .upgrade_in_event_loop(move |ui| {
-                    let model = ui.get_marks();
+            weak_ui.upgrade_in_event_loop(move |ui| {
+                let ui_rows: Vec<MarkRowItem> = rows.into_iter().map(to_ui_row).collect();
 
-                    let model = model
-                        .as_any()
-                        .downcast_ref::<VecModel<MarkRowItem>>()
-                        .expect("marks backed by Vec<T>");
-                    model.set_vec(rows);
-                })
-                .unwrap();
+                let model = ui.get_marks();
+
+                let model = model
+                    .as_any()
+                    .downcast_ref::<VecModel<MarkRowItem>>()
+                    .expect("marks backed by Vec<T>");
+                model.set_vec(ui_rows);
+            })?;
         }
     }
     Ok(())
@@ -111,7 +132,7 @@ pub async fn handle_search(
             .iter()
             .filter(|row| row.title.to_lowercase().contains(&query))
             .cloned()
-            .collect::<Vec<MarkRowItem>>()
+            .collect::<Vec<MarkData>>()
     };
 
     let Some(ui) = weak_ui.upgrade() else {
@@ -123,7 +144,7 @@ pub async fn handle_search(
         .as_any()
         .downcast_ref::<VecModel<MarkRowItem>>()
         .expect("marks backed by Vec<T>");
-    model.set_vec(filtered_rows);
+    model.set_vec(filtered_rows.into_iter().map(to_ui_row).collect::<Vec<_>>());
     Ok(())
 }
 

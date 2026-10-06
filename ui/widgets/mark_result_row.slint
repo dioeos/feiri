@@ -1,28 +1,63 @@
+import { Icon } from "../components/icon.slint";
 import { MarkRowItem } from "../structs/mark_row_item.slint";
+import { ColorsTheme } from "../styling/ColorsTheme.slint";
+import { FontTheme } from "../styling/FontTheme.slint";
 
-export component MarkResultRow {
-  in property <MarkRowItem> mark;
-  in property <bool> is-current;
-  callback activated();
+export component MarkResultRow inherits Rectangle {
+    in property <MarkRowItem> mark;
+    in property <bool> is-current;
+    callback activated();
 
-  height: 36px;
-
-  Rectangle {
-    background: ta.pressed || root.is-current ? orange : transparent;
+    height: 56px;
+    border-radius: 9px;
+    border-width: root.is-current ? 1px : 0px;
+    border-color: ColorsTheme.selected;
+    background: root.is-current || touch.pressed ? ColorsTheme.selected : touch.has-hover ? ColorsTheme.hover : transparent;
 
     HorizontalLayout {
-      padding: 6px;
-      spacing: 8px;
-
-      Text { text: root.mark.slot; }
-      Text {
-        text: root.mark.title;
-        horizontal-stretch: 1;
-        overflow: elide;
-        wrap: no-wrap;
-      }
+        padding-left: 10px;
+        padding-right: 12px;
+        spacing: 10px;
+        Rectangle {
+            width: 30px;
+            horizontal-stretch: 0;
+            Icon {
+                icon-src: root.mark.icon;
+                width-length: 20px;
+                height-length: 20px;
+                y: (parent.height - self.height) / 2;
+            }
+        }
+        VerticalLayout {
+            alignment: center;
+            spacing: 2px;
+            horizontal-stretch: 1;
+            Text {
+                text: root.mark.title;
+                font-size: 14px;
+                font-weight: FontTheme.strong-weight;
+                color: ColorsTheme.text-primary;
+                overflow: elide;
+                wrap: no-wrap;
+            }
+        }
+        Rectangle {
+            width: 32px;
+            height: 20px;
+            y: (parent.height - self.height) / 2;
+            background: ColorsTheme.secondary-accent;
+            border-color: ColorsTheme.accent;
+            border-width: 1px;
+            border-radius: 6px;
+            Text {
+                text: root.mark.slot;
+                color: #36689a;
+                font-size: 11px;
+                font-weight: 400;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
+        }
     }
-
-    ta := TouchArea {}
-  }
+    touch := TouchArea { clicked => { root.activated(); } }
 }

@@ -66,6 +66,7 @@
                 pkgs.lib.makeLibraryPath [
                   pkgs.wayland
                   pkgs.libxkbcommon
+                  pkgs.libglvnd
                 ]
               }"
           '';

@@ -1,20 +1,46 @@
 mod callbacks;
+mod config;
+mod data;
 mod error;
+
+mod icons;
 
 use error::Error;
 
-use std::{rc::Rc, sync::Arc};
+use std::{
+    rc::Rc,
+    sync::{Arc, OnceLock},
+};
 
 use feiri_ipc::{Reply, Request, Response, socket::Socket};
-use slint::VecModel;
+use slint::{Color, SharedString, VecModel};
 use tokio::{runtime, sync::Mutex};
 use tokio_stream::StreamExt;
 use tracing::{error, info};
 use tracing_subscriber::{EnvFilter, fmt};
 
+use crate::{config::Config, data::MarkData, icons::entry::DesktopEntryIndex};
+
+pub fn use_config() -> &'static Config {
+    static CONFIG: OnceLock<Config> = OnceLock::new();
+
+    CONFIG.get_or_init(|| {
+        Config::load().unwrap_or_else(|err| panic!("FATAL - WHILE LOADING CONF - Cause: {err:?}"))
+    })
+}
+
+pub fn use_desktop_index() -> &'static DesktopEntryIndex {
+    static DESKTOP_INDEX: OnceLock<DesktopEntryIndex> = OnceLock::new();
+
+    DESKTOP_INDEX.get_or_init(|| {
+        DesktopEntryIndex::build()
+            .unwrap_or_else(|err| panic!("FATAL - WHILE BUILDING DESKTOP INDEX - Cause: {err:?}"))
+    })
+}
+
 slint::include_modules!();
 
-fn main() -> Result<(), Error> {
+fn main() -> Result<(), anyhow::Error> {
     dotenvy::dotenv().ok();
     let format = fmt::format().with_level(true).with_target(true).compact();
 
@@ -24,6 +50,8 @@ fn main() -> Result<(), Error> {
         )
         .event_format(format)
         .init();
+
+    let config = use_config();
 
     let rt = runtime::Builder::new_multi_thread()
         .worker_threads(1)
@@ -36,11 +64,40 @@ fn main() -> Result<(), Error> {
 
     let ui = AppWindow::new()?;
 
+    ui.global::<FontTheme>()
+        .set_font_small(config.font.small_length as f32);
+    ui.global::<FontTheme>()
+        .set_strong_weight(config.font.strong_weight as i32);
+    ui.global::<FontTheme>()
+        .set_font_medium(config.font.medium_length as f32);
+    ui.global::<FontTheme>()
+        .set_font_family(SharedString::from(config.font.family.clone()));
+
+    let color_bg: Color = config::parse_color(&config.colors.background)?;
+    let color_surface: Color = config::parse_color(&config.colors.surface)?;
+    let color_bg_border: Color = config::parse_color(&config.colors.border)?;
+    let color_accent: Color = config::parse_color(&config.colors.accent)?;
+    let color_secondary_accent: Color = config::parse_color(&config.colors.secondary_accent)?;
+    let color_selected: Color = config::parse_color(&config.colors.selected)?;
+    let color_hover: Color = config::parse_color(&config.colors.hover)?;
+    let color_txt_primary: Color = config::parse_color(&config.colors.text_primary)?;
+
+    ui.global::<ColorsTheme>().set_background(color_bg);
+    ui.global::<ColorsTheme>().set_surface(color_surface);
+    ui.global::<ColorsTheme>().set_border(color_bg_border);
+    ui.global::<ColorsTheme>().set_accent(color_accent);
+    ui.global::<ColorsTheme>()
+        .set_secondary_accent(color_secondary_accent);
+    ui.global::<ColorsTheme>().set_selected(color_selected);
+    ui.global::<ColorsTheme>().set_hover(color_hover);
+    ui.global::<ColorsTheme>()
+        .set_text_primary(color_txt_primary);
+
     //@NOTE: Arc<Mutex<T>> is preferred over `Rc` due to `marks_state` being captured by a closure
     //       passed to `slint_invoke_from_event_loop` from a `tokio::spawn` task. `Rc` does not have
     //       `Send`, making it incorrect choice to wrap the state. The `all_marks_state` role is to
     //       share state between the tokio background worker thread and the main Slint event thread.
-    let all_marks_state = Arc::new(Mutex::new(Vec::<MarkRowItem>::new()));
+    let all_marks_state = Arc::new(Mutex::new(Vec::<MarkData>::new()));
     let all_marks_state_for_event_stream = Arc::clone(&all_marks_state);
 
     let marks_model = Rc::new(VecModel::<MarkRowItem>::default());

@@ -22,7 +22,7 @@ slint = {
   features = [
     "std",
     "backend-winit-wayland",
-    "renderer-software",
+    "renderer-femtovg",
     "compat-1-18"
   ],
 }
@@ -31,6 +31,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter", "std", "fmt"] 
 dotenvy = "0.15"
 async-trait = "0.1.92"
 thiserror = "2.0.20"
+toml = "1.1.6"
 
 [workspace.package]
 edition = "2024"
