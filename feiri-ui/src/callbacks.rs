@@ -7,21 +7,28 @@ use feiri_ipc::{
 use slint::{Model, SharedString, VecModel};
 
 use crate::{
-    AppWindow, MarkRowItem, config,
+    AppWindow, MarkRowItem,
     data::{MarkData, MarksState},
+    icons::{self, entry},
+    use_config, use_desktop_index,
 };
 
 use super::error::Error;
 
 //@NOTE: Call only on the Slint UI thread: Image is not Send.
 fn to_ui_row(row: MarkData) -> MarkRowItem {
+    let index = use_desktop_index();
+    let config = use_config();
+    let app_id = row.app_id;
+
+    let icon_path = entry::find_entry_for_app_id(index, &app_id)
+        .and_then(|entry| icons::resolve_icon(entry, &config.icons.icon_theme));
+
     MarkRowItem {
         slot: row.slot.into(),
         title: row.title.into(),
-        icon: row
-            .app_id
-            .as_deref()
-            .and_then(config::icon_for_app_id)
+        icon: icon_path
+            .and_then(|path| slint::Image::load_from_path(&path).ok())
             .unwrap_or_default(),
     }
 }

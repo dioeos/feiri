@@ -3,30 +3,42 @@ mod config;
 mod data;
 mod error;
 
-use anyhow::{Context, bail};
+mod icons;
+
 use error::Error;
 
 use std::{
-    env::var_os,
-    fs::{self},
-    io::ErrorKind,
-    path::PathBuf,
     rc::Rc,
-    sync::Arc,
+    sync::{Arc, OnceLock},
 };
 
 use feiri_ipc::{Reply, Request, Response, socket::Socket};
-use slint::{Color, VecModel};
+use slint::{Color, SharedString, VecModel};
 use tokio::{runtime, sync::Mutex};
 use tokio_stream::StreamExt;
 use tracing::{error, info};
 use tracing_subscriber::{EnvFilter, fmt};
 
-use crate::{config::Config, data::MarkData};
+use crate::{config::Config, data::MarkData, icons::entry::DesktopEntryIndex};
+
+pub fn use_config() -> &'static Config {
+    static CONFIG: OnceLock<Config> = OnceLock::new();
+
+    CONFIG.get_or_init(|| {
+        Config::load().unwrap_or_else(|err| panic!("FATAL - WHILE LOADING CONF - Cause: {err:?}"))
+    })
+}
+
+pub fn use_desktop_index() -> &'static DesktopEntryIndex {
+    static DESKTOP_INDEX: OnceLock<DesktopEntryIndex> = OnceLock::new();
+
+    DESKTOP_INDEX.get_or_init(|| {
+        DesktopEntryIndex::build()
+            .unwrap_or_else(|err| panic!("FATAL - WHILE BUILDING DESKTOP INDEX - Cause: {err:?}"))
+    })
+}
 
 slint::include_modules!();
-
-pub const FEIRI_CONFIG_FILE_PATH: &str = "feiri/config.toml";
 
 fn main() -> Result<(), anyhow::Error> {
     dotenvy::dotenv().ok();
@@ -39,33 +51,7 @@ fn main() -> Result<(), anyhow::Error> {
         .event_format(format)
         .init();
 
-    let xdg_config_os_string =
-        var_os("XDG_CONFIG_HOME").context("XDG_CONFIG_HOME environment varialbe is not set")?;
-
-    let mut config_path = PathBuf::from(xdg_config_os_string);
-    config_path.push(FEIRI_CONFIG_FILE_PATH);
-
-    let config_contents = match fs::read_to_string(&config_path) {
-        Ok(contents) => contents,
-        Err(err) if err.kind() == ErrorKind::NotFound => {
-            if let Some(parent) = config_path.parent() {
-                fs::create_dir_all(parent)?;
-            }
-
-            let default_config = Config::default();
-            let contents = toml::to_string(&default_config)?;
-
-            fs::write(&config_path, &contents)?;
-
-            contents
-        }
-        Err(err) => {
-            bail!("Failed to read Feiri config: {err}");
-        }
-    };
-
-    let config: Config = toml::from_str(&config_contents)
-        .with_context(|| format!("Failed to read Feiri config at {}", config_path.display()))?;
+    let config = use_config();
 
     let rt = runtime::Builder::new_multi_thread()
         .worker_threads(1)
@@ -85,7 +71,7 @@ fn main() -> Result<(), anyhow::Error> {
     ui.global::<FontTheme>()
         .set_font_medium(config.font.medium_length as f32);
     ui.global::<FontTheme>()
-        .set_font_family(config.font.family.into());
+        .set_font_family(SharedString::from(config.font.family.clone()));
 
     let color_bg: Color = config::parse_color(&config.colors.background)?;
     let color_surface: Color = config::parse_color(&config.colors.surface)?;

@@ -1,17 +1,56 @@
-use std::{
-    env::{self, var_os},
-    fs,
-    path::{Path, PathBuf},
-};
+use std::{env::var_os, fs, io::ErrorKind, path::PathBuf};
 
 use super::Error;
 use serde::{Deserialize, Serialize};
 use slint::Color;
 
+pub const FEIRI_CONFIG_FILE_PATH: &str = "feiri/config.toml";
+
 #[derive(Deserialize, Serialize)]
 pub struct Config {
     pub font: FontConfig,
     pub colors: ColorsConfig,
+    pub icons: IconsConfig,
+}
+
+impl Config {
+    pub fn load() -> Result<Self, Error> {
+        let xdg_config_os_string =
+            var_os("XDG_CONFIG_HOME").ok_or_else(|| Error::MissingEnvironmentVariable {
+                variable: "XDG_CONFIG_HOME".into(),
+            })?;
+
+        let mut config_path = PathBuf::from(xdg_config_os_string);
+        config_path.push(FEIRI_CONFIG_FILE_PATH);
+
+        let config_contents = match fs::read_to_string(&config_path) {
+            Ok(contents) => contents,
+            Err(err) if err.kind() == ErrorKind::NotFound => {
+                if let Some(parent) = config_path.parent() {
+                    fs::create_dir_all(parent).map_err(Error::FailedToCreateDir)?;
+                }
+
+                let default_config = Config::default();
+                let contents =
+                    toml::to_string(&default_config).map_err(Error::FailedToSerializeConfig)?;
+
+                fs::write(&config_path, &contents).map_err(Error::FailedToWriteConfig)?;
+
+                contents
+            }
+            Err(err) => {
+                return Err(Error::ConfigFailure(err.to_string()));
+            }
+        };
+
+        let config: Config =
+            toml::from_str(&config_contents).map_err(|err| Error::FailedToDeserializeConfig {
+                config_path: format!("{}", config_path.display()),
+                reason: err.to_string(),
+            })?;
+
+        Ok(config)
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -34,6 +73,11 @@ pub struct ColorsConfig {
     pub text_primary: String,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct IconsConfig {
+    pub icon_theme: String,
+}
+
 impl Default for Config {
     fn default() -> Self {
         Self {
@@ -53,66 +97,11 @@ impl Default for Config {
                 hover: "#F0F0F3".into(),
                 text_primary: "#1D1D1F".into(),
             },
+            icons: IconsConfig {
+                icon_theme: "hicolor".into(),
+            },
         }
     }
-}
-
-fn desktop_icon_name(path: &Path) -> Option<String> {
-    let contents = fs::read_to_string(path).ok()?;
-
-    let mut in_desktop_entry = false;
-    for line in contents.lines().map(str::trim) {
-        if line.starts_with('[') {
-            in_desktop_entry = line == "[Desktop Entry]";
-        } else if in_desktop_entry
-            && let Some(icon) = line.strip_prefix("Icon=")
-            && !icon.is_empty()
-        {
-            return Some(icon.to_owned());
-        }
-    }
-    None
-}
-
-pub fn icon_for_app_id(app_id: &str) -> Option<slint::Image> {
-    if app_id.is_empty() {
-        return None;
-    }
-
-    let filename = format!("{app_id}.desktop");
-
-    let mut dirs = Vec::new();
-
-    if let Some(home) = var_os("XDG_DATA_HOME").filter(|var| !var.is_empty()) {
-        dirs.push(home.into());
-    } else if let Some(home) = var_os("HOME") {
-        dirs.push(PathBuf::from(home).join(".local/share"));
-    }
-
-    let sys_dirs = var_os("XDG_DATA_DIRS")
-        .filter(|var| !var.is_empty())
-        .unwrap_or_else(|| "/usr/local/share:/usr/share".into());
-
-    dirs.extend(env::split_paths(&sys_dirs));
-
-    let desktop_file = dirs
-        .into_iter()
-        .map(|dir| dir.join("applications").join(&filename))
-        .find(|path| path.is_file())?;
-
-    let icon_name = desktop_icon_name(&desktop_file)?;
-
-    let icon_path = if Path::new(&icon_name).is_absolute() {
-        PathBuf::from(icon_name)
-    } else {
-        freedesktop_icons::lookup(&icon_name)
-            .with_size(32)
-            .with_scale(1)
-            .with_theme("hicolor")
-            .find()?
-    };
-
-    slint::Image::load_from_path(&icon_path).ok()
 }
 
 pub fn parse_color(hex: &str) -> Result<Color, Error> {

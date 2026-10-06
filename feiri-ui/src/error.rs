@@ -1,3 +1,5 @@
+use std::io;
+
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("Fatal UI platform error: {0}")]
@@ -33,4 +35,22 @@ pub enum Error {
     //config specific
     #[error("{self:?}")]
     InvalidConfig(String),
+
+    #[error("{self:?}")]
+    ConfigFailure(String),
+
+    #[error("{self:?}")]
+    MissingEnvironmentVariable { variable: String },
+
+    #[error("failed to create config path")]
+    FailedToCreateDir(#[source] io::Error),
+
+    #[error("failed to write default config contents")]
+    FailedToWriteConfig(#[source] io::Error),
+
+    #[error("{self:?}")]
+    FailedToSerializeConfig(#[source] toml::ser::Error),
+
+    #[error("{self:?}")]
+    FailedToDeserializeConfig { config_path: String, reason: String },
 }
