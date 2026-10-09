@@ -1,17 +1,21 @@
+mod config;
+mod error;
 mod handlers;
 mod ipc;
 mod niri;
 mod services;
 
+use std::sync::OnceLock;
 use std::{env::var_os, path::PathBuf, sync::Arc};
 
 use anyhow::Context;
 use tokio::sync::Mutex;
 use tokio::sync::broadcast::{Receiver as BroadcastReceiver, Sender as BroadcastSender};
 use tokio::sync::mpsc::{self, Receiver, Sender};
-use tracing::info;
+use tracing::{debug, info};
 use tracing_subscriber::{EnvFilter, fmt};
 
+use crate::config::DaemonConfig;
 use crate::handlers::{ActionHandler, QueryHandler};
 use crate::niri::WindowManager;
 use crate::{
@@ -21,6 +25,15 @@ use crate::{
 };
 
 pub const FEIRI_IPC_SOCK: &str = "feiri-ipc.sock";
+
+pub fn use_config() -> &'static DaemonConfig {
+    static CONFIG: OnceLock<DaemonConfig> = OnceLock::new();
+
+    CONFIG.get_or_init(|| {
+        DaemonConfig::load()
+            .unwrap_or_else(|err| panic!("FATAL - WHILE LOADING DAEMON CONFG - Cause: {err:?}"))
+    })
+}
 
 #[tokio::main(worker_threads = 2)]
 async fn main() -> Result<(), anyhow::Error> {
@@ -33,6 +46,9 @@ async fn main() -> Result<(), anyhow::Error> {
         )
         .event_format(format)
         .init();
+
+    let config = use_config();
+    debug!(?config.default_marks, "default marks");
 
     let niri_socket_for_listener = niri_ipc::socket::Socket::connect()
         .context("Failed to connect to niri IPC for listener")?;

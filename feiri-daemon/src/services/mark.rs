@@ -13,6 +13,7 @@ pub struct MarkService {
     last_focused_slot: Mutex<Option<usize>>,
 }
 
+//@TODO: Remove `Result<(), Error> for according functions since some are infallible
 #[allow(dead_code)]
 impl MarkService {
     pub fn new(window_manager: WindowManager) -> Self {
@@ -68,10 +69,9 @@ impl MarkService {
         Ok(())
     }
 
-    pub async fn mark_window(&self, slot: u8, window_id: WindowId) -> Result<(), Error> {
+    pub async fn mark_window(&self, slot: u8, window_id: WindowId) {
         self.mark_store.insert_mark(slot, window_id).await;
         debug!(window_id = window_id.0, mark = slot, "mark window");
-        Ok(())
     }
 
     pub async fn focus_marked_window(&self, slot: u8) -> Result<(), Error> {

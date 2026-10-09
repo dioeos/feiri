@@ -6,6 +6,7 @@ use tracing::{debug, trace};
 use crate::{
     niri::conversions::IntoFeiriWindow,
     services::{MarkService, WindowService},
+    use_config,
 };
 
 #[allow(dead_code)]
@@ -29,6 +30,20 @@ impl EventHandler {
             niri_ipc::Event::WindowOpenedOrChanged { window } => {
                 debug!(window = ?window, "window opened or changed");
                 let domain_window = window.into_feiri_window();
+
+                let default_mark = domain_window.app_id.as_deref().and_then(|app_id| {
+                    use_config()
+                        .default_marks
+                        .iter()
+                        .find(|mark| mark.app_id == app_id)
+                });
+
+                if let Some(mark) = default_mark {
+                    self.mark_service
+                        .mark_window(mark.slot, domain_window.id)
+                        .await;
+                }
+
                 self.window_service.upsert_window(domain_window).await;
             }
             niri_ipc::Event::WindowClosed { id } => {
@@ -39,6 +54,20 @@ impl EventHandler {
                 debug!(windows_count = windows.len(), "windows changed");
                 for w in windows {
                     let domain_window = w.into_feiri_window();
+
+                    let default_mark = domain_window.app_id.as_deref().and_then(|app_id| {
+                        use_config()
+                            .default_marks
+                            .iter()
+                            .find(|mark| mark.app_id == app_id)
+                    });
+
+                    if let Some(mark) = default_mark {
+                        self.mark_service
+                            .mark_window(mark.slot, domain_window.id)
+                            .await;
+                    }
+
                     self.window_service.upsert_window(domain_window).await;
                 }
             }
