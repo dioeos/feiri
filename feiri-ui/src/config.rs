@@ -4,7 +4,7 @@ use super::Error;
 use serde::{Deserialize, Serialize};
 use slint::Color;
 
-pub const FEIRI_CONFIG_FILE_PATH: &str = "feiri/config.toml";
+pub const FEIRI_CONFIG_FILE_PATH: &str = "feiri/ui-config.toml";
 
 #[derive(Deserialize, Serialize)]
 pub struct Config {
