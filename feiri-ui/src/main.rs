@@ -19,13 +19,13 @@ use tokio_stream::StreamExt;
 use tracing::{error, info};
 use tracing_subscriber::{EnvFilter, fmt};
 
-use crate::{config::Config, data::MarkData, icons::entry::DesktopEntryIndex};
+use crate::{config::UiConfig, data::MarkData, icons::entry::DesktopEntryIndex};
 
-pub fn use_config() -> &'static Config {
-    static CONFIG: OnceLock<Config> = OnceLock::new();
+pub fn use_config() -> &'static UiConfig {
+    static CONFIG: OnceLock<UiConfig> = OnceLock::new();
 
     CONFIG.get_or_init(|| {
-        Config::load().unwrap_or_else(|err| panic!("FATAL - WHILE LOADING CONF - Cause: {err:?}"))
+        UiConfig::load().unwrap_or_else(|err| panic!("FATAL - WHILE LOADING UI CONF - Cause: {err:?}"))
     })
 }
 
