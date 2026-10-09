@@ -25,7 +25,8 @@ pub fn use_config() -> &'static UiConfig {
     static CONFIG: OnceLock<UiConfig> = OnceLock::new();
 
     CONFIG.get_or_init(|| {
-        UiConfig::load().unwrap_or_else(|err| panic!("FATAL - WHILE LOADING UI CONF - Cause: {err:?}"))
+        UiConfig::load()
+            .unwrap_or_else(|err| panic!("FATAL - WHILE LOADING UI CONF - Cause: {err:?}"))
     })
 }
 
